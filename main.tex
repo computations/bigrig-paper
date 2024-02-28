@@ -1,0 +1,181 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage[square, numbers, sort&compress]{natbib}
+
+\bibliographystyle{abbrvnat}
+
+\title{\texttt{bigrig}: A historical biogeography range simulator using the
+	DEC[+J] model}
+\author{Ben Bettisworth}
+
+\begin{document}
+
+\newcommand{\CountFull}[1]{|#1|_\text{full}}
+\newcommand{\CountEmpty}[1]{|#1|_\text{empty}}
+
+\maketitle
+
+\section{Terminology}
+
+We denote the number of regions for a range \( r \) as \( |r| = n\).
+Each region can either be occupied, in which case we say it is full, or it can
+be unoccupied, in which case we say it is empty.
+We write the number of full regions a region has as \( \CountFull{r} \), and
+the number of empty regions as \( \CountEmpty{r} \).
+
+\section{Methods}
+
+\subsection{The DEC[+J] Model} \label{sec:model}
+
+The Dispersion, Extinction and Cladogenesis (DEC) model defines the probability
+of observing particular geographical history given a pair of parameters for
+dispersion and extinction rates.
+In the model, there are 3 processes affecting the range of a particular
+species.
+Dispersion and extinction are the processes by which a range is added or
+removed over time due to random drifts.
+The process is modeled as each region independently transitioning to a
+different state (either from full to empty or vise versa) with waiting times
+distributed exponentially based on the respective rate.
+This is to say, for a region \( r \) which is full in a model with extinction
+rate \( e \) the waiting time \( w \) for \( r \) to transition to empty is \(
+w \sim \text{Exp}(e) \).
+
+The third process is cladogenesis, I.E. when a parent species splits into two
+daughter species.
+When this occurs, some regions from the parent's range will be inherited by one
+daughter, and rest will be inherited by the other daughter.
+The particular way in which the parent ranges are inherited is governed by a
+set of scenarios.
+In the original Ree \textit{et. al.}\cite{ALikelihoodFrReeR2005} paper, these
+scenarios are simply labeled Scenario 1, 2, and 3.
+However, the scenarios are intended to represent realistic cladogenesis
+methods.
+In the interest of clarity and memorability, we will use the more common names,
+similar to how Matkze \cite{ModelSelectionMatzke2014} has done in his paper.
+
+The three cladogenesis scenarios possible in the original DEC model are:
+allopatry (or vicariance), where the daughter ranges are disjoint; sympatry,
+where the daughter species share some ranges; and copy, where both daughter
+ranges are the same as the parent range.
+An assumption by the DEC model is that speciation can only occur in one range,
+and therefore, at least one of the daughter ranges will consist of only a
+single region.
+Additionally, the copy scenario can only occur when the parent range is a
+single region.
+When a cladogenesis event occurs (that is, when a node splits into two
+daughters) the DEC model computes the probability of these events as being
+equivalent, where possible.
+This is to say, when considering if a particular cladogenesis pattern was the
+result of allopatry or sympatry, DEC considers these events to have equal
+weight.
+To compute the probability of a particular type of cladogenesis event over the
+set \(T = \left\{\text{Allopatry, Sympatry, Copy}\right\}\) we compute
+\[
+	P(t |
+	s) = \frac{C(t | s)}{\sum_{u \in T} C(u | s)},
+\]
+where \( C(t|s) \) is the
+count of cladogenesis events of type $ t $ which are possible given the parent
+range \( s \).
+
+Matzke\cite{ModelSelectionMatzke2014} extended the cladogenesis probability
+computation by: allowing for a new "jump" type of cladogenesis events; and
+weights for each of the different cladogenesis types such that a particular
+type can be more likely than the others.
+This pair of modifications to the DEC model are generally denoted as DEC+J,
+similar to how gamma rate categories is denoted GTR+G4 in phylogenetic models.
+Under this modified model, the probability of a particular type of cladogenesis
+event is computed
+\[
+	P(t | s) = \frac{w_t C(t | s)}{\sum_{u \in T} w_u C(u |
+		s)},
+\]
+where $w_t$ is the weight for the cladogenesis type $t$.
+Additionally, $T$ is augmented by the new type "jump" to become \(T =
+\left\{\text{Allopatry, Sympatry, Copy, Jump}\right\} \).
+
+\subsection{Design}
+
+For the purposes of simulating a biogeographical history under the DEC[+J]
+model I have broken up the model into two phases: the evolution of a range
+\textit{along} a branch, which encompasses both extinction and dispersion; and
+the splitting of a range at cladogenesis.
+I call these two phases of simulation the spread and the split, respectively.
+
+For both phases, I have implemented two independent methods of simulating
+results, with the purpose of ensuring the accuracy of the simulation.
+The first method of simulating results for both phases is a rejection method.
+Rejection methods are slow, but reliable, methods of simulating stochastic
+functions.
+Of particular interest here is that they are easy to implement correctly, as
+they are well understood, even for complex problems.
+In general, they operate by generating a random result uniformly, and then
+checking if that solution is valid.
+If the solution is valid, the process returns the result.
+Otherwise, it generates a new result and checks again, repeating until a valid
+result is generated.
+
+The other general method of simulating results that I have implemented is what
+I call analytic methods.
+These methods implement optimizations which ought to be true analytically, but
+are more complex.
+Additionally, an effort is made to only generate a single result, greatly
+accelerating the simulation.
+Often, methods like this are an order of magnitude or more faster than
+rejection methods, depending on the problem.
+However, this additional complexity can make it difficult to ensure accurate
+results.
+Therefore, by checking the results of the analytic methods against the results
+of rejection methods, we get the best of both: an correctly implemented and
+fast method of simulation.
+
+\subsection{Simulating the Spread}
+
+As mentioned in Section~\ref{sec:model}, the evolution of a range along a
+branch is modeled as a Poisson process, analogous to the character evolution
+models used in phylogenetic inference.
+
+The problem is this: given an initial range \( r \) with \( |r| = n \) regions,
+and a branch length \( t \), produce a final range which has undergone
+extinction and dispersion at rates \( e \) and \( d \), respectively.
+When a range experiences dispersion, it gains a region.
+Analogously, when a range experiences extinction, it loses a region, Each of
+the regions is treated as an independent process from each other.
+This observation is the basis for the rejection method of spread simulation:
+randomly generate \( n \) waiting times, labeled \( w_i \), for each region.
+Specifically, the waiting times are distributed as
+\begin{equation}
+	\label{eq:exp-rejection} w_i \sim
+	\begin{cases}
+		\text{Exp}(e) & \text{if } r_i
+		= 1                            \\ \text{Exp}(d) & \text{if } r_i = 0.
+	\end{cases}
+\end{equation}
+Once all $n$ waiting times are generated, we pick the smallest, say $w_i$, and
+invert $r_i$.
+We repeat this process until the total waiting time exceeds the branch length,
+at which point we return a list of transition events, excluding the final event
+who's waiting time exceeded the branch length.
+
+Keen readers might already be aware of the fact that if we have a set of
+independent processes like above, the entire set can be represented by a single
+exponential distribution, with \(w \sim \text{Exp}(t) \) where
+\begin{equation}
+	\label{eq:exp-param} t = e \times \CountFull{r} + d \times \CountEmpty{r}.
+\end{equation}
+This second method then is to compute \( t \) using Eq.~\ref{eq:exp-param},
+draw a waiting waiting time \( w \sim \text{Exp}(t) \).
+Once a time is rolled, we pick a region with weights equal to the exponential
+distribution parameter in Eq.~\ref{eq:exp-rejection}.
+
+We implement both of the above methods, but only use the second to preform
+simulations.
+The first method is used to check the results of the second method.
+
+\subsection{Simulating the Split}
+
+\bibliography{references}
+
+\end{document}
