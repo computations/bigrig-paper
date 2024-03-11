@@ -3,12 +3,11 @@
 \usepackage[utf8]{inputenc}
 \usepackage[square, numbers, sort&compress]{natbib}
 \usepackage{minted}
-\usepackage{tcolorbox}
 
 \bibliographystyle{abbrvnat}
 
 \title{\texttt{bigrig}: A historical biogeography range simulator using the
-  DEC[+J] model}
+	DEC[+J] model}
 \author{Ben Bettisworth}
 
 \begin{document}
@@ -75,8 +74,8 @@ weight.
 To compute the probability of a particular type of cladogenesis event over the
 set \(T = \left\{\text{Allopatry, Sympatry, Copy}\right\}\) we compute
 \[
-  P(t |
-  s) = \frac{C(t | s)}{\sum_{u \in T} C(u | s)},
+	P(t |
+	s) = \frac{C(t | s)}{\sum_{u \in T} C(u | s)},
 \]
 where \( C(t|s) \) is the
 count of cladogenesis events of type $ t $ which are possible given the parent
@@ -91,8 +90,8 @@ similar to how gamma rate categories is denoted GTR+G4 in phylogenetic models.
 Under this modified model, the probability of a particular type of cladogenesis
 event is computed
 \[
-  P(t | s) = \frac{w_t C(t | s)}{\sum_{u \in T} w_u C(u |
-    s)},
+	P(t | s) = \frac{w_t C(t | s)}{\sum_{u \in T} w_u C(u |
+		s)},
 \]
 where $w_t$ is the weight for the cladogenesis type $t$.
 Additionally, $T$ is augmented by the new type "jump" to become \(T =
@@ -149,11 +148,11 @@ This observation is the basis for the rejection method of spread simulation:
 randomly generate \( n \) waiting times, labeled \( w_i \), for each region.
 Specifically, the waiting times are distributed as
 \begin{equation}
-  \label{eq:exp-rejection} w_i \sim
-  \begin{cases}
-    \text{Exp}(e) & \text{if } r_i
-    = 1                            \\ \text{Exp}(d) & \text{if } r_i = 0.
-  \end{cases}
+	\label{eq:exp-rejection} w_i \sim
+	\begin{cases}
+		\text{Exp}(e) & \text{if } r_i
+		= 1                            \\ \text{Exp}(d) & \text{if } r_i = 0.
+	\end{cases}
 \end{equation}
 Once all $n$ waiting times are generated, we pick the smallest, say $w_i$, and
 invert $r_i$.
@@ -165,7 +164,7 @@ Keen readers might already be aware of the fact that if we have a set of
 independent processes like above, the entire set can be represented by a single
 exponential distribution, with \(w \sim \text{Exp}(t) \) where
 \begin{equation}
-  \label{eq:exp-param} t = e \times \CountFull{r} + d \times \CountEmpty{r}.
+	\label{eq:exp-param} t = e \times \CountFull{r} + d \times \CountEmpty{r}.
 \end{equation}
 This second method then is to compute \( t \) using Eq.~\ref{eq:exp-param},
 draw a waiting waiting time \( w \sim \text{Exp}(t) \).
@@ -178,58 +177,75 @@ The first method is used to check the results of the second method.
 
 \subsection{Simulating the Split}
 
-Note that a split can be viewed as an ordered triplet of binary numbers \( (p,l,r) \), where $p$ is the parent range and
-$l$ and $r$ are the child ranges.
-Therefore, we can simulate a split by generating two random numbers (the parent split $p$ is given), and rejecting
-invalid splits.
-That is, we accept splits which fall into one of the categories defined in Section~\ref{sec:model}.
-We present a C++ function to determine the split type given three \mintinline{c++}{uint64_t} (labeled
-\mintinline{c++}{dist_t}) in Listing~\ref{lst:determine-split-type}.
-Using this function, we reject any split that is of type \mintinline{c++}{split_type_e::invalid}, and accept
-otherwise.
+Note that a split can be viewed as an ordered triplet of binary numbers \(
+(p,l,r) \), where $p$ is the parent range and $l$ and $r$ are the child ranges.
+Therefore, we can simulate a split by generating two random numbers (the parent
+split $p$ is given), and rejecting invalid splits.
+That is, we accept splits which fall into one of the categories defined in
+Section~\ref{sec:model}.
+We present a C++ function to determine the split type given three
+\mintinline{c++}{uint64_t} (labeled \mintinline{c++}{dist_t}) in
+Listing~\ref{lst:determine-split-type}.
+Using this function, we reject any split that is of type
+\mintinline{c++}{split_type_e::invalid}, and accept otherwise.
 
-In order to implement the weighted split type introduced by Matzke in \cite{ModelSelectionMatzke2014}, we accept with
-probability equal to the normalized split weight.
-For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$, then a jump type split will be accepted
-with probability $j/(y + s + v + j)$\footnotemark.
+In order to implement the weighted split type introduced by Matzke in
+\cite{ModelSelectionMatzke2014}, we accept with probability equal to the
+normalized split weight.
+For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$,
+then a jump type split will be accepted with probability $j/(y + s + v +
+j)$\footnotemark.
 
-To accelerate this process, we implement an optimized version of split simulation.
+To accelerate this process, we implement an optimized version of split
+simulation.
 First, we generate the split type according to the type weights.
 This is done in two cases, singleton and non-singleton.
-In the singleton case, we generate a split type from $\{\text{jump}, \text{copy}\}$, weighted accordingly.
-In the non-singleton case, we generate a split type from $\{\text{jump}, \text{sympatry}, \text{allopatry}\}$, also
-weighted accordingly.
+In the singleton case, we generate a split type from $\{\text{jump},
+\text{copy}\}$, weighted accordingly.
+In the non-singleton case, we generate a split type from $\{\text{jump},
+\text{sympatry}, \text{allopatry}\}$, also weighted accordingly.
 
 The total weight for each type is
 \begin{equation}
-  w_s = C(s|r) \times u_s
+	w_s = C(s|r) \times u_s
 \end{equation}
-where $C(s|r)$ is the count of splits of type $s$ that are possible given region $r$. For example, for the region
-\texttt{11} there are 2 ways to split allopatrically: $(\texttt{10}, \texttt{01})$ and $(\texttt{01},
-  \texttt{10})$\footnote{Left and right branches are distinguishable, so we swaps are also valid.}\footnotemark.
+where $C(s|r)$ is the count of splits of type $s$ that are
+possible given region $r$.
+For example, for the region \texttt{11} there are 2 ways to split
+allopatrically: $(\texttt{10}, \texttt{01})$ and $(\texttt{01},
+\texttt{10})$\footnote{Left and right branches are distinguishable, so we swaps
+	are also valid.}\footnotemark.
+Occasionally, it is convenient to refer to the normalized split weight, in
+which case we write \( \overline{w_s} \).
 The formulas for various counts are
 \begin{align*}
-  C(\text{allopatry}|r) & = \CountFull{r} \times 2 - (2 \text{ if } \CountFull{r} = 2) \\
-  C(\text{sympatry}|r)  & = \CountFull{r} \times 2                                     \\
-  C(\text{jump}|r)      & = \CountEmpty{r} \times 2                                    \\
-  C(\text{copy}|r)      & = 2                                                          \\
+	C(\text{allopatry}|r) & =
+	\CountFull{r} \times 2 - (2 \text{ if } \CountFull{r} = 2) \\
+	C(\text{sympatry}|r)  & = \CountFull{r} \times 2           \\ C(\text{jump}|r) & =
+	\CountEmpty{r} \times 2                                    \\ C(\text{copy}|r) & = 2 \\
 \end{align*}
 
-\footnotetext{This result depends on the process used to count. If an region is selected, and then the child to inherit
-  that region is selected, you get 4 ways to allopatrically split with 2 full regions. That is, a process based counting
-  method gets a different result, where the process is a speciation event in a region, and then a random selection of the
-  child branch.}
+\footnotetext{This result depends on the process used to
+	count.
+	If an region is selected, and then the child to inherit that region is
+	selected, you get 4 ways to allopatrically split with 2 full regions.
+	That is, a process based counting method gets a different result, where the
+	process is a speciation event in a region, and then a random selection of the
+	child branch.}
 
-Once a split type is simulated, we generate a split according to that type by first determining which region will
-be flipped\footnotemark.
+Once a split type is simulated, we generate
+a split according to that type by first determining which region will be
+flipped\footnotemark.
 If the split type is jump, the region is chosen from among the empty regions.
-If the split type is allopatry or sympatry, the region is chosen from among the full regions.
-Once the region is flipped, we pick randomly which child gets which region, with uniform probability.
+If the split type is allopatry or sympatry, the region is chosen from among the
+full regions.
+Once the region is flipped, we pick randomly which child gets which region,
+with uniform probability.
 
 \footnotetext{If the type is copy, we can simply return the tuple $(p, p, p)$ where $p$ is the parent range.}
 
 \begin{listing}
-  \begin{minted}{c++}
+	\begin{minted}{c++}
 split_type_e determine_split_type(dist_t parent_dist, 
                                   dist_t left_dist, 
                                   dist_t right_dist) {
@@ -262,34 +278,50 @@ split_type_e determine_split_type(dist_t parent_dist,
   return split_type_e::invalid;
 }
 \end{minted}
-  \caption{A function to determine the split type given three numbers.}
-  \label{lst:determine-split-type}
+	\caption{A function to determine the split type given three numbers.}
+	\label{lst:determine-split-type}
 \end{listing}
 
 \subsection{Testing}
 
-
 \subsubsection{Spread}
 
 For the purposes of ensuring correct results, we perform 2 types of tests.
-The first test pre-computes the expected value of the waiting time given the model paramters, and performs a t-test
-against that expected value.
-We compute 1,886,084,219 iterations of the spread function, which allows us to be 99.999\% that the error is less than
-0.0001.
+The first test pre-computes the expected value of the waiting time given the
+model parameters, and performs a t-test against that expected value.
+We compute 1,886,084,219 iterations of the spread function, which allows us to
+be 99.999\% confident that the error is less than 0.0001.
 We perform this test for 7 different regions and 16 different parameter sets.
 
-The second test is a regression test against the rejection method. We again run both methods for 1,886,084,219
-iterations, which again ensures that the error is less than 0.0001 with 99.999\% confidence.
-We perform this test for 5 different intial regions and 16 different parameter sets.
-
+The second test is a regression test against the rejection method.
+We again run both methods for 1,886,084,219 iterations, which again ensures
+that the error is less than 0.0001 with 99.999\% confidence.
+We perform this test for 5 different initial regions and 16 different parameter
+sets.
 
 \subsubsection{Split}
 
-Like with the spread, we use the slower rejection method to test that the results of the optimized method are correct.
-We run both methods for 487,791,396 iterations and count of generated types for each.
-This number of iterations ensures that the methods produce the same results to a tolerance of \texttt{1e-4} with
-99.999\% confidence.
-We perform this test for 5 different parent regions, and 5 different sets of model parameters.
+To test that the correct proportion of splits are generated by the simulation,
+we simulate a sample of splits, and check that the proportion of generated
+splits matches the expected proportion.
+Specifically, we check that if there are \(n\) simulations for a given model
+and range \( r \), then we should expect that there are \(\overline{w_t} \times
+n\) splits of type \( t \).
+We model the realized count of split types as being drawn from a normal
+distribution, and perform a t-test to ensure that the realized count is
+approximately equal to the expected count.
+Again, we compute 1,886,084,219 simulations for 10 different ranges and 8
+different sets of model parameters, which ensures a 99.999\% confidence that
+the error is less than 0.0001.
+
+Like with the spread, we use the slower rejection method to test that the
+results of the optimized method are correct.
+We run both methods for 487,791,396 iterations and count of generated types for
+each.
+This number of iterations ensures that the methods produce the same results to
+a tolerance of \texttt{1e-4} with 99.999\% confidence.
+We perform this test for 5 different parent regions, and 5 different sets of
+model parameters.
 
 \bibliography{references}
 
