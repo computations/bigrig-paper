@@ -107,53 +107,57 @@ certainly correct via extremely rigorous statistical tests.
 \section{Methods}
 
 Before we describe the methods used to simulate and test the results of
-\bigrig{}, we would like to define some terminology. We denote the number of
-regions for a range \( r \) as \( |r| = n\).
-Each region can either be occupied by the species in question, in which case we
-say it is full, or it can be unoccupied, in which case we say it is empty.
+\bigrig{}, we will define some terminology and conventions.
+A range will be written as a binary string, for example \texttt{0101}.
+Each position in the string represents a region, with \texttt{1} denoting a full
+region, and \texttt{0} denoting an empty region.
+We denote the total number of regions for a range \( r \) as \( |r| = n\).
 We write the number of full regions a region has as \( \CountFull{r} \), and the
 number of empty regions as \( \CountEmpty{r} \).
+We denote a particular region in a range $r$ as $r_i$, for some index $i$.
 
 \subsection{The DEC[+J] Model} \label{sec:model}
 
 The Dispersion, Extinction and Cladogenesis (DEC) model defines the probability
 of observing particular geographical history given a pair of parameters for
 dispersion and extinction rates.
-In the model, there are 3 processes affecting the range of a particular
-species.
-Dispersion and extinction are the processes by which a range is added or
-removed over time due to random drifts.
+In the model, there are 3 processes affecting the range of along a phylogenetic
+tree.
+The first two processes, dispersion and extinction, represent the stochastic
+range shifts over time, either newly occupying or leaving a region.
 The process is modeled as each region independently transitioning to a
 different state (either from full to empty or vise versa) with waiting times
 distributed exponentially based on the respective rate.
-This is to say, for a region \( r \) which is full in a model with extinction
-rate \( e \) the waiting time \( w \) for \( r \) to transition to empty is \(
-w \sim \text{Exp}(e) \).
+This is to say, for a region \( r_i \) which is full with extinction
+rate \( e \) the waiting time \( w \) for \( r_i \) to transition to empty is \(
+w \sim \text{Exp}(e) \) (or $\sim \text{Exp}(d)$ for an empty region.)
 
-The third process is cladogenesis, I.E. when a parent species splits into two
+The third process is cladogenesis, when a parent species splits into two
 daughter species.
 When this occurs, some regions from the parent's range will be inherited by one
 daughter, and rest will be inherited by the other daughter.
-The particular way in which the parent ranges are inherited is governed by a
-set of scenarios.
-In the original Ree \textit{et. al.}\cite{ALikelihoodFrReeR2005} paper, these
-scenarios are simply labeled Scenario 1, 2, and 3.
-However, the scenarios are intended to represent realistic cladogenesis
-methods.
+The particular way in which the parent ranges are inherited in the strict DEC
+model is governed by a set of scenarios, which were originally given by 
+Ree \textit{et. al.}\citep{ALikelihoodFrReeR2005}.
+In that paper, these scenarios were simply labeled Scenario 1, 2, and 3, however
+the scenarios are intended to represent realistic cladogenesis methods.
 In the interest of clarity and memorability, we will use the more common names,
-similar to how Matkze \cite{ModelSelectionMatzke2014} has done in his paper.
+similar to how it was done in \citet{ModelSelectionMatzke2014}.
 
-The three cladogenesis scenarios possible in the original DEC model are:
+Informally, the three cladogenic scenarios possible in the strict DEC model are:
 allopatry (or vicariance), where the daughter ranges are disjoint; sympatry,
-where the daughter species share some ranges; and copy, where both daughter
-ranges are the same as the parent range.
+where the daughter species share some at least one range; and copy, where both
+daughter ranges are the same as the parent range.
+A copy cladogenic event is distinct from sympatric event as a copy event can
+only occur when the parent species occupies only a single region.
+For a more formal reference for each of these scenarios, please refer to either
+\citet{ALikelihoodFrReeR2005} or \citet{ModelSelectionMatzke2014}.
+
 An assumption by the DEC model is that speciation can only occur in one range,
 and therefore, at least one of the daughter ranges will consist of only a
 single region.
-Additionally, the copy scenario can only occur when the parent range is a
-single region.
 When a cladogenesis event occurs (that is, when a node splits into two
-daughters) the DEC model computes the probability of these events as being
+daughters) the DEC model computes the probability of these event types as being
 equivalent, where possible.
 This is to say, when considering if a particular cladogenesis pattern was the
 result of allopatry or sympatry, DEC considers these events to have equal
@@ -169,13 +173,12 @@ count of cladogenesis events of type $ t $ which are possible given the parent
 range \( s \).
 
 Matzke\cite{ModelSelectionMatzke2014} extended the cladogenesis probability
-computation by: allowing for a new "jump" type of cladogenesis events; and
-weights for each of the different cladogenesis types such that a particular
-type can be more likely than the others.
-This pair of modifications to the DEC model are generally denoted as DEC+J,
-similar to how gamma rate categories is denoted GTR+G4 in phylogenetic models.
+computation by allowing for a new ``jump" type of cladogenesis events and
+introducing weights for each of the different cladogenesis types such that a
+particular event type can be more likely than the others.
+This pair of modifications to the DEC model are generally denoted as DEC+J.
 Under this modified model, the probability of a particular type of cladogenesis
-event is computed
+event is computed as
 \[
 	P(t | s) = \frac{w_t C(t | s)}{\sum_{u \in T} w_u C(u |
 		s)},
@@ -281,7 +284,7 @@ In order to implement the weighted split type introduced by Matzke in
 normalized split weight.
 For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$,
 then a jump type split will be accepted with probability $j/(y + s + v +
-j)$\footnotemark.
+j)$.
 
 To accelerate this process, we implement an optimized version of split
 simulation.
@@ -312,8 +315,8 @@ The formulas for various counts are
   \CountEmpty{r} \times 2                                    \\ C(\text{copy}|r) & = 2 \\
 \end{align*}
 
-\footnotetext{This result depends on the process used to
-	count.
+\footnotetext{
+  This result depends on the process used to count.
 	If an region is selected, and then the child to inherit that region is
 	selected, you get 4 ways to allopatrically split with 2 full regions.
 	That is, a process based counting method gets a different result, where the
@@ -369,6 +372,10 @@ split_type_e determine_split_type(dist_t parent_dist,
 	\caption{A function to determine the split type given three numbers.}
 	\label{lst:determine-split-type}
 \end{listing}
+
+\subsubsection{Simulating the tree}
+
+
 
 \subsection{Testing}
 
