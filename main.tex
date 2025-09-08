@@ -161,7 +161,8 @@ these operations) is extremely efficient.
 
 The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability
 of observing particular geographical history given a pair of parameters for
-dispersion and extinction rates.
+dispersion and extinction rates and a phylogenetic tree equipped with branch
+lengths. 
 In this model, there are 3 processes affecting the range of along a phylogenetic
 tree.
 The first two processes, dispersion and extinction, represent the stochastic
@@ -171,65 +172,53 @@ different state (either from full to empty or vise versa) with waiting times
 distributed exponentially based on the respective rate.
 This is to say, for a region \( r_i \) which is full with extinction
 rate \( e \) the waiting time \( w \) for \( r_i \) to transition to empty is \(
-w \sim \text{Exp}(e) \) (or $\sim \text{Exp}(d)$ for an empty region.)
+w \sim \text{Exp}(e) \) (or $w \sim \text{Exp}(d)$ to transition an empty region
+to a full region).
 
-The third process is cladogenesis---when a parent species splits into two
+The third process, cladogenesis, occurs when a parent species splits into two
 daughter species.
-The ranges of the daughter species is inherited, possibly with modification,
-from the parent's range.
-The particular way in which the parent ranges are inherited in the strict DEC
-model is governed by a set of 3 scenarios intended to represent realistic
-processes of speciation.
+The ranges of the two daughter species are inherited from the parent's range,
+and are therefor a subset of the parent range.
+DEC defines a set of three scenarios intended to represent realistic speciation
+events.
 In \citet{ALikelihoodFrReeR2005}, these scenarios are simply labeled Scenario 1,
 2, and 3, which represent ``copy" (single-range sympatric), allopatric, and
 sympatric events, respectively.
-In the interest of clarity and memorability, we will use these more common
-names, similar to \citet{ModelSelectionMatzke2014}, even though they are not
-strictly accurate as only represent a subset of the possible events.
-
-Informally, the three cladogenic scenarios possible in the strict DEC model
-are defined as follows: allopatry (or vicariance), where the daughter ranges are
-disjoint; sympatry, where the daughter species share some at least one range;
-and copy, where both daughter ranges are the same as the parent range.
-A copy cladogenic event is distinct from sympatric event as a copy event can
-only occur when the parent species occupies only a single region (is a singleton
-range).
-We give a formal definition of cladogenesis events in
-Section~\ref{sec:formal-cladogenesis}.
-
-\citet{ModelSelectionMatzke2014} extended the set of cladogenesis events by
-adding a new ``jump" type, intended to represent ``founder-event speciation",
-where a small population becomes isolated via colonization of a new area.
-Additionally, \citet{ModelSelectionMatzke2014} also allowed for the relative probability
-of the cladogenesis events vary.
-introducing weights for each of the different cladogenesis types such that a
-particular event type can be more likely than the others.
+In the interest of clarity, we will eschew using the original labels, and
+instead use the terms \textit{copy}, \textit{allopatry}, and \textit{sympatry}
+to describe speciation scenarios similar to \citet{ModelSelectionMatzke2014}.
+In addition to the three original cladogenesis types 
+\citet{ModelSelectionMatzke2014} proposed a ``jump" type, intended to represent
+``founder-event speciation", where a small population becomes isolated via
+colonization of a new area.
+We give a formal definition for the cladogenesis events in the following Section.
 
 \subsection{A Formal Definition of Cladogenesis Events}
 \label{sec:formal-cladogenesis}
 
 A cladogenesis event can be thought of as a tuple of ranges $(p, l, r)$, where
 $p$ is the parent range, and $l$ and $r$ are the left and right child ranges,
-respectively. For the DEC[+J] model, it is required that at least one of $l$ or
-$r$ is a singleton. For the rest of this section, let us suppose that the
-singleton range is $l$, without loss of generality.
+respectively. 
+An assumption by the DEC[+J] model is that speciation can only occur in one
+area, and therefore at least one of the daughter ranges ($l$ or $r$) will be a
+singleton.
+For the rest of this section, let us suppose that the singleton range is $l$,
+without loss of generality.
 
-An assumption by the DEC model is that speciation can only occur in one area,
-and therefore at least one of the daughter ranges will be a singleton.
 When a cladogenesis event occurs the \textit{strict} DEC model assumes the
 probability of these event types is equal.
-This is to say, when considering if a particular cladogenesis pattern was the
-result of allopatry or sympatry, \textit{strict} DEC considers these events to
+This is to say, when considering if a particular cladogenesis result was the
+an allopatric or sympatric, \textit{strict} DEC considers these events to
 have equal weight.
 To compute the probability of a particular type of cladogenesis event over the
 set \(T = \left\{\text{Allopatry, Sympatry, Copy}\right\}\) we compute
 \[
 	P(t |
-	s) = \frac{C(t | s)}{\sum_{u \in T} C(u | s)},
+	s) = \frac{C(t | p)}{\sum_{u \in T} C(u | p)},
 \]
-where \( C(t|s) \) is the
+where \( C(t|p) \) is the
 count of cladogenesis events of type $ t $ which are possible given the parent
-range \( s \).
+range.
 
 Matzke\cite{ModelSelectionMatzke2014} extended the cladogenesis probability
 computation by allowing for a new ``jump" type of cladogenesis events and
