@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{geometry}[margins=1in]
 \usepackage{amsmath}
@@ -126,7 +126,7 @@ In this section, we will describe the methods we use to implement, test, and ver
 But first, we need to introduce some terminology and notation.
 In this paper, the possible areas that a taxon can be found is referred to as a \textit{region}.
 An area is made up of non-overlapping regions, and all regions together make up the complete area under study.
-A \textit{range} describes the abscence and presence for every region in an area.
+A \textit{range} describes the absence and presence for every region in an area.
 We denote the number of total possible regions (I.E. the size) for a range \( r \) as \( |r| \).
 Each region can either be occupied by the species in question, in which case we say it is full, or it can be unoccupied,
 in which case we say it is empty.
@@ -138,101 +138,85 @@ We denote the \textit{bitwise} \textit{and}, \textit{or}, and \textit{exclusive 
 $\rand{r}{s}$, $\ror{r}{s}$, $\rxor{r}{s}$ respectively.
 We denote the \textit{bitwise} \textit{right shift} and \textit{left shift} of a range $r$ and a positive integer $n$ as
 $\rLshift{r}{n}$ and $\rRshift{r}{n}$\footnotemark.
-The \textit{bitwise negation} is denoted by $\rneg{r}$.
-\textit{Bitwise} indicates that the operation should be performed region by region. For example the \textit{bitwise and}
-is defined as detail $r_i \land s_i = t_i$ where $0 \leq i \leq |r|$, $\texttt{1} \land \texttt{1} = \texttt{1}$ and is
-equal to \texttt{0} otherwise.
+\textit{Bitwise negation} is denoted by $\rneg{r}$.
+\textit{Bitwise} indicates that the operation should be independently on each character in the string (that is, each
+region). 
+For example the \textit{bitwise and} is defined as detail $r_i \land s_i = t_i$ where $0 \leq i \leq |r|$, $\texttt{1}
+\land \texttt{1} = \texttt{1}$ and is equal to \texttt{0} otherwise.
 
 \footnotetext{For those that are interested, we do not use a rotating shift in this work.}
 
-These operations are of a particular interest for us as they have either direct
-analogues as CPU instructions, or can be trivially computed using a composition
-of CPU instructions.
-Consequently, computing the results of these operations only requires 1 or 2 CPU
-cycles. 
-As such, computation of these operations (and functions which are composed of
-these operations) is extremely efficient.
+These operations are of a particular interest for us as they can be computed using only a few comparatively cheap CPU
+instructions.
+Consequently, computing the results of these operations often requires less than a single CPU cycle
+\cite{Abel19a} \footnotemark.
+As such, computation of these operations (and functions which are composed of these operations) is extremely efficient.
 
-\subsection{A Summary of the \decj Model and its Variants} \label{sec:model}
+\footnotetext{This is due to the capabilities of modern CPUs to dispatch more than one instruction per cycle, depending
+on the specific instructions.}
 
-The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability
-of observing particular geographical history given a pair of parameters for
-dispersion and extinction rates and a phylogenetic tree equipped with branch
+\subsection{A Summary of the DEC model and its Variants} \label{sec:model}
+
+The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability of observing particular geographical
+history given a pair of parameters for dispersion and extinction rates and a phylogenetic tree equipped with branch
 lengths. 
-In this model, there are 3 processes affecting the range of along a phylogenetic
-tree.
-The first two processes, dispersion and extinction, represent the stochastic
-range shifts over time, either newly occupying or vacating a region.
-The process is modeled as each region independently transitioning to a
-different state (either from full to empty or vise versa) with waiting times
-distributed exponentially based on the respective rate.
-This is to say, for a region \( r_i \) which is full with extinction
-rate \( e \) the waiting time \( w \) for \( r_i \) to transition to empty is \(
-w \sim \text{Exp}(e) \) (or $w \sim \text{Exp}(d)$ to transition an empty region
-to a full region).
+In this model, there are 3 processes affecting the range of along a phylogenetic tree.
+The first two processes, dispersion and extinction, represent the stochastic range shifts over time, either newly
+occupying or vacating a region.
+The process is modeled as each region independently transitioning to a different state (either from full to empty or
+vise versa) with waiting times distributed exponentially based on the respective rate.
+This is to say, for a region \( r_i \) which is full with extinction rate \( e \) the waiting time \( w \) for \( r_i \)
+to transition to empty is \( w \sim \text{Exp}(e) \) (or $w \sim \text{Exp}(d)$ to transition an empty region to a full
+region).
 
-The third process, cladogenesis, occurs when a parent species splits into two
-daughter species.
-The ranges of the two daughter species are inherited from the parent's range,
-and are therefor a subset of the parent range.
-DEC defines a set of three scenarios intended to represent realistic speciation
-events.
-In \citet{ALikelihoodFrReeR2005}, these scenarios are simply labeled Scenario 1,
-2, and 3, which represent ``copy" (single-range sympatric), allopatric, and
-sympatric events, respectively.
-In the interest of clarity, we will eschew using the original labels, and
-instead use the terms \textit{copy}, \textit{allopatry}, and \textit{sympatry}
-to describe speciation scenarios similar to \citet{ModelSelectionMatzke2014}.
-In addition to the three original cladogenesis types 
-\citet{ModelSelectionMatzke2014} proposed a ``jump" type, intended to represent
-``founder-event speciation", where a small population becomes isolated via
-colonization of a new area.
+The third process, cladogenesis, occurs when a parent species splits into two daughter species.
+The ranges of the two daughter species are inherited from the parent's range, and are therefor a subset of the parent
+range.
+DEC defines a set of three scenarios intended to represent realistic speciation events.
+In \citet{ALikelihoodFrReeR2005}, these scenarios are simply labeled Scenario 1, 2, and 3, which represent ``copy"
+(single-range sympatric), allopatric, and sympatric events, respectively.
+In the interest of clarity, we will eschew using the original labels, and instead use the terms \textit{copy},
+\textit{allopatry}, and \textit{sympatry} to describe speciation scenarios similar to \citet{ModelSelectionMatzke2014}.
+In addition to the three original cladogenesis types \citet{ModelSelectionMatzke2014} proposed a ``jump" type, intended
+to represent ``founder-event speciation", where a small population becomes isolated via colonization of a new area.
 We give a formal definition for the cladogenesis events in the following Section.
 
 \subsection{A Formal Definition of Cladogenesis Events}
 \label{sec:formal-cladogenesis}
 
-A cladogenesis event can be thought of as a tuple of ranges $(p, l, r)$, where
-$p$ is the parent range, and $l$ and $r$ are the left and right child ranges,
-respectively. 
-An assumption by the DEC[+J] model is that speciation can only occur in one
-area, and therefore at least one of the daughter ranges ($l$ or $r$) will be a
-singleton.
-For the rest of this section, let us suppose that the singleton range is $l$,
-without loss of generality.
+A cladogenesis event can be thought of as a tuple of ranges $(p, l, r)$, where $p$ is the parent range, and $l$ and $r$
+are the left and right child ranges, respectively. 
+An assumption by the DEC[+J] model is that speciation occurs instantaneously and is isolated to a single area, and
+therefore at least one of the daughter ranges ($l$ or $r$) will be a singleton.
+For the rest of this section, let $l$ be the singleton range, without loss of generality.
 
-When a cladogenesis event occurs the \textit{strict} DEC model assumes the
-probability of these event types is equal.
-This is to say, when considering if a particular cladogenesis result was the
-an allopatric or sympatric, \textit{strict} DEC considers these events to
-have equal weight.
-To compute the probability of a particular type of cladogenesis event over the
-set \(T = \left\{\text{Allopatry, Sympatry, Copy}\right\}\) we compute
+When a cladogenesis event occurs the \textit{strict} DEC model assumes the probability of any event type is equal.
+This is to say, when considering if a particular cladogenesis result was of an allopatric or sympatric, \textit{strict}
+DEC considers these events to have equal weight.
+To compute the probability of a particular type of cladogenesis event over the set \(T = \left\{\text{Allopatry,
+Sympatry, Copy}\right\}\) we compute
 \[
 	P(t |
 	s) = \frac{C(t | p)}{\sum_{u \in T} C(u | p)},
 \]
-where \( C(t|p) \) is the
-count of cladogenesis events of type $ t $ which are possible given the parent
-range.
+where \( C(t|p) \) is the count of cladogenesis events of type $t$ which are possible given the parent range, and $T$ is
+the set of all possible types.
 
-Matzke\cite{ModelSelectionMatzke2014} extended the cladogenesis probability
-computation by: allowing for a new ``jump" type of cladogenesis events; and
-weights for each of the different cladogenesis types such that a particular
-type can be more likely than the others.
-This pair of modifications to the DEC model are generally denoted as DEC+J,
-similar to how gamma rate categories is denoted GTR+G4 in phylogenetic models.
-Under this modified model, the probability of a particular type of cladogenesis
-event is computed as
+\citet{ModelSelectionMatzke2014} extended the cladogenesis probability computation by adding a new ``jump" type of
+cladogenesis event and incorporating weights for each cladogenesis type.
+The first addition, the ``jump" type, is intended to model ``founder events''.
+The second addition allows for different event types to be relatively more or less likely.
+This pair of modifications to the DEC model are generally denoted as DEC+J, similar to how gamma rate categories is
+denoted GTR+G4 in phylogenetic models.
+Under this modified model, the probability of a particular type of cladogenesis event is computed as
 \begin{equation}
-	P(t | s) = \frac{w_t C(t | s)}{\sum_{u \in T} w_u C(u |
-		s)},
+	P(t | p) = \frac{w_t C(t | p)}{\sum_{u \in T} w_u C(u | p)},
 \end{equation}
 where $w_t$ is the weight for the cladogenesis type $t$.
-Additionally, $T$ is augmented by the new type ``jump" to become \(T =
-\left\{\text{Allopatry, Sympatry, Copy, Jump}\right\} \).
-Informally, ``jump" events are cladogenesis events which allows one of the
-daughter species to disperse to a unoccupied range.
+Additionally, $T$ is augmented by the new type ``jump" to become \(T = \left\{\text{Allopatry, Sympatry, Copy,
+Jump}\right\} \).
+Informally, ``jump" events are cladogenesis events which allows one of the daughter species to disperse to a unoccupied
+range.
 
 We define the cladogenesis event types as
 \begin{equation}
@@ -245,16 +229,13 @@ T(e) = T(p, l, r) =
 \end{cases}
 \label{eq:clad-test}
 \end{equation}
-Importantly, this definition is in terms of bitwise operations and equality
-operations.
 
-For the purposes of simulating a biogeographical history under the \decj{}
-model I have broken up the model into two phases: the evolution of a range
-\textit{along} a branch, which encompasses both extinction and dispersion; and
-the splitting of a range at cladogenesis.
+For the purposes of simulating a biogeographical history under the \decj{} model I have broken up the model into two
+phases: the evolution of a range \textit{along} a branch, which encompasses both extinction and dispersion; and the
+splitting of a range at cladogenesis.
 I call these two phases of simulation the spread and the split, respectively.
 
-\subsection{Additional Extensions to the \decj Model}
+% \subsection{Additional Extensions to the \decj Model}
 
 \section{Methods}
 
