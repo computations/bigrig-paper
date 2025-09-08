@@ -155,42 +155,39 @@ these operations) is extremely efficient.
 
 \subsection{A Summary of the \decj Model and its Variants} \label{sec:model}
 
-The Dispersion, Extinction, and Cladogenesis model (hereafter the simply the DEC model) is a model of biogeographic
-range evolution, which describes the evolution of a range over time on a phylogenetic tree.
-In the model, there are 3 processes affecting the range of a particular species.
-Dispersion and extinction are the processes by which a range is added or removed over time due to random drifts.
-The process is modeled as each region independently transitioning to a different state (either from full to empty or
-vise versa) with waiting times distributed exponentially based on the respective rate.
-This is to say, for a region \( r \) which is full in a model with extinction rate \( e \) the waiting time \( w \) for
-\( r \) to transition to empty is \( w \sim \text{Exp}(e) \).
+The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability
+of observing particular geographical history given a pair of parameters for
+dispersion and extinction rates and a phylogenetic tree equipped with branch
+lengths. 
+In this model, there are 3 processes affecting the range of along a phylogenetic
+tree.
+The first two processes, dispersion and extinction, represent the stochastic
+range shifts over time, either newly occupying or vacating a region.
+The process is modeled as each region independently transitioning to a
+different state (either from full to empty or vise versa) with waiting times
+distributed exponentially based on the respective rate.
+This is to say, for a region \( r_i \) which is full with extinction
+rate \( e \) the waiting time \( w \) for \( r_i \) to transition to empty is \(
+w \sim \text{Exp}(e) \) (or $w \sim \text{Exp}(d)$ to transition an empty region
+to a full region).
 
-The third process is cladogenesis, I.E. when a parent species splits into two daughter species.
-When this occurs, some regions from the parent's range will be inherited by one daughter, and rest will be inherited by
-the other daughter.
-The particular way in which the parent ranges are inherited is governed by a set of scenarios.
-In the original Ree \textit{et. al.}\cite{ALikelihoodFrReeR2005} paper, these scenarios are simply labeled Scenario 1,
-2, and 3.
-However, the scenarios are intended to represent realistic cladogenesis methods.
-In the interest of clarity and memorability, we will use the more common names, similar to how Matkze
-\cite{ModelSelectionMatzke2014} has done in his paper.
-
-Informally, the three cladogenic scenarios possible in the strict DEC model
-are defined as follows: allopatry (or vicariance), where the daughter ranges are
-disjoint; sympatry, where the daughter species share some at least one range;
-and copy, where both daughter ranges are the same as the parent range.
-A copy cladogenic event is distinct from sympatric event as a copy event can
-only occur when the parent species occupies only a single region (is a singleton
-range).
-We give a formal definition of cladogenesis events in
-Section~\ref{sec:formal-cladogenesis}.
-
-\citet{ModelSelectionMatzke2014} extended the set of cladogenesis events by
-adding a new ``jump" type, intended to represent ``founder-event speciation",
-where a small population becomes isolated via colonization of a new area.
-Additionally, \citet{ModelSelectionMatzke2014} also allowed for the relative probability
-of the cladogenesis events vary.
-introducing weights for each of the different cladogenesis types such that a
-particular event type can be more likely than the others.
+The third process, cladogenesis, occurs when a parent species splits into two
+daughter species.
+The ranges of the two daughter species are inherited from the parent's range,
+and are therefor a subset of the parent range.
+DEC defines a set of three scenarios intended to represent realistic speciation
+events.
+In \citet{ALikelihoodFrReeR2005}, these scenarios are simply labeled Scenario 1,
+2, and 3, which represent ``copy" (single-range sympatric), allopatric, and
+sympatric events, respectively.
+In the interest of clarity, we will eschew using the original labels, and
+instead use the terms \textit{copy}, \textit{allopatry}, and \textit{sympatry}
+to describe speciation scenarios similar to \citet{ModelSelectionMatzke2014}.
+In addition to the three original cladogenesis types 
+\citet{ModelSelectionMatzke2014} proposed a ``jump" type, intended to represent
+``founder-event speciation", where a small population becomes isolated via
+colonization of a new area.
+We give a formal definition for the cladogenesis events in the following Section.
 
 \subsection{A Formal Definition of Cladogenesis Events}
 \label{sec:formal-cladogenesis}
