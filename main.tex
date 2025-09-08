@@ -134,17 +134,16 @@ We write the number of full regions a region has as \( \CountFull{r} \), and the
 \CountEmpty{r} \).
 
 Additionally, we define some operations on ranges.
-We denote the \textit{bitwise} \textit{and}, \textit{or}, and \textit{exclusive
-or} of ranges $r$ and $s$ as $\rand{r}{s}$, $\ror{r}{s}$, $\rxor{r}{s}$
-respectively.
-We denote the \textit{bitwise} \textit{right shift} and \textit{left shift} of a
-range $r$ and a positive integer $n$ as $\rLshift{r}{n}$ and $\rRshift{r}{n}$.
+We denote the \textit{bitwise} \textit{and}, \textit{or}, and \textit{exclusive or} of ranges $r$ and $s$ as
+$\rand{r}{s}$, $\ror{r}{s}$, $\rxor{r}{s}$ respectively.
+We denote the \textit{bitwise} \textit{right shift} and \textit{left shift} of a range $r$ and a positive integer $n$ as
+$\rLshift{r}{n}$ and $\rRshift{r}{n}$\footnotemark.
 The \textit{bitwise negation} is denoted by $\rneg{r}$.
-\textit{Bitwise} indicates that the operation should be performed
-region by region. 
-For example the \textit{bitwise and} is defined as detail $r_i \land s_i = t_i$
-where $0 \leq i \leq |r|$, $\texttt{1} \land \texttt{1} = \texttt{1}$ and is
+\textit{Bitwise} indicates that the operation should be performed region by region. For example the \textit{bitwise and}
+is defined as detail $r_i \land s_i = t_i$ where $0 \leq i \leq |r|$, $\texttt{1} \land \texttt{1} = \texttt{1}$ and is
 equal to \texttt{0} otherwise.
+
+\footnotetext{For those that are interested, we do not use a rotating shift in this work.}
 
 These operations are of a particular interest for us as they have either direct
 analogues as CPU instructions, or can be trivially computed using a composition
