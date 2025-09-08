@@ -197,26 +197,27 @@ particular event type can be more likely than the others.
 
 A cladogenesis event can be thought of as a tuple of ranges $(p, l, r)$, where
 $p$ is the parent range, and $l$ and $r$ are the left and right child ranges,
-respectively. For the DEC[+J] model, it is required that at least one of $l$ or
-$r$ is a singleton. For the rest of this section, let us suppose that the
-singleton range is $l$, without loss of generality.
+respectively. 
+An assumption by the DEC[+J] model is that speciation can only occur in one
+area, and therefore at least one of the daughter ranges ($l$ or $r$) will be a
+singleton.
+For the rest of this section, let us suppose that the singleton range is $l$,
+without loss of generality.
 
-An assumption by the DEC model is that speciation can only occur in one area,
-and therefore at least one of the daughter ranges will be a singleton.
 When a cladogenesis event occurs the \textit{strict} DEC model assumes the
 probability of these event types is equal.
-This is to say, when considering if a particular cladogenesis pattern was the
-result of allopatry or sympatry, \textit{strict} DEC considers these events to
+This is to say, when considering if a particular cladogenesis result was the
+an allopatric or sympatric, \textit{strict} DEC considers these events to
 have equal weight.
 To compute the probability of a particular type of cladogenesis event over the
 set \(T = \left\{\text{Allopatry, Sympatry, Copy}\right\}\) we compute
 \[
 	P(t |
-	s) = \frac{C(t | s)}{\sum_{u \in T} C(u | s)},
+	s) = \frac{C(t | p)}{\sum_{u \in T} C(u | p)},
 \]
-where \( C(t|s) \) is the
+where \( C(t|p) \) is the
 count of cladogenesis events of type $ t $ which are possible given the parent
-range \( s \).
+range.
 
 Matzke\cite{ModelSelectionMatzke2014} extended the cladogenesis probability
 computation by: allowing for a new ``jump" type of cladogenesis events; and
