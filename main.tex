@@ -239,25 +239,19 @@ I call these two phases of simulation the spread and the split, respectively.
 
 \section{Methods}
 
-For the purposes of generating data under the DEC[+J] model, there are two
-phases to the simulation: range changes \textit{along} a branch(dispersion and
-extinction), and range changes at speciation events (cladogenesis).
-For the purpose of memnotics, we call these two phases the \textit{spread} and
-the \textit{split}.
+For the purposes of generating data under the DEC[+J] model, there are two phases to the simulation: range changes which
+occur along a branch (dispersion and extinction), and range changes which occur at speciation events (cladogenesis).
+For mnemonic reasons, we will refer to these phases the \textit{spread} and \textit{split} phases.
 
-For both phases, we have implemented two independent methods of simulating
-results, with the purpose of checking that the results of the two methods match.
-Specifically, we have implemented independent methods with the goal of ensuring
-identical results between the two.
-The first method of simulating results (for both the spread and split phases) is
-rejection sampling.
-In rejection sampling, a random result is generated and then checked for
+For both phases, we have implemented two independent methods of data results, with the purpose of checking that the
+results of the two methods match. 
+Specifically, we have implemented independent methods with the goal of ensuring identical results between the two.
+The first method of simulating results (for both the spread and split phases) is rejection sampling.
+In rejection sampling, a random result is generated via a process utilize well known distributions and then checked for
 validity.
-If the result is valid, it is accepted (possibly with some probability to
-correct for the initial distribution).
-If the result was invalid, it is rejected and a new result is generated.
-In general, rejection methods are very computationally inefficient, as some of
-the results generated are simply discarded. 
+If the result was invalid, it is rejected and a new result is generated, and if the result is valid, it is accepted.
+In general, rejection methods are very computationally inefficient, as for sufficiently complicated validity tests, many
+results will need to be generated before a result is accepted.
 However, they are extremely reliable and easy to implement.
 This is to say, they have a low chance of software errors.
 
