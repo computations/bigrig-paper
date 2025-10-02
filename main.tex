@@ -1,9 +1,10 @@
+%! TeX program = lualatex
+
 \documentclass[a4paper]{article}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{geometry}[margins=1in]
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[utf8]{inputenc}
 \usepackage[square, numbers, sort&compress]{natbib}
 \usepackage{minted}
 \usepackage{graphicx}
@@ -125,15 +126,18 @@ For this work, we define the individual sectors that a taxon can be found is ref
 An \textit{area} is made up of non-overlapping regions, and all regions together make up the complete area under study.
 When not otherwise stated, we will use area to mean the complete area.
 A \textit{range} describes the absence or presence for every region in an area.
-We denote the number of total possible regions (I.E. the size) for a range \( r \) as \( |r| \).
-Each region can either be occupied by the species in question, in which case we say it is full, or it can be unoccupied,
-in which case we say it is empty.
-We write the number of full regions a region has as \( \CountFull{r} \), and the number of empty regions as \(
+We denote the total number of regions for a range \( r \) as \( |r| \).
+Each region can either be occupied, in which case we say it is full, or it can be unoccupied, in which case we say it is
+empty.
+We write the number of full regions a range has as \( \CountFull{r} \), and the number of empty regions as \(
 \CountEmpty{r} \).
 The value of the $i$th region of a range will be denoted as $r_i$.
+In practice and for simplicity, ranges will be represented as binary strings, with $1$ indicating a full region, and $0$
+representing an empty region.
+\todo{Maybe an example?}
 
 For the regions $r$ and $s$ we denote \textit{bitwise and} as $\rand{r}{s}$, \textit{bitwise or} as $\ror{r}{s}$,
-\textit{bitwise exclusive or} as $\rxor{r}{s}$, and \textit{Bitwise negation} as $\rneg{r}$.
+\textit{bitwise exclusive or} as $\rxor{r}{s}$, and \textit{bitwise negation} as $\rneg{r}$.
 Here, \textit{bitwise} indicates that the operation should be independently on each character in the string (that is,
 each region). 
 For example the \textit{bitwise and} is defined as detail $r_i \land s_i = t_i$ where $0 \leq i \leq |r|$, $\texttt{1}
@@ -151,56 +155,63 @@ on the specific instructions.}
 
 \subsection{A Summary of the DEC model and its Variants} \label{sec:model}
 
-The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability of observing particular geographical
-history given a pair of parameters for dispersion and extinction rates and a phylogenetic tree equipped with branch
-lengths. 
-In this model, there are 3 processes affecting the range of along a phylogenetic tree.
+The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability of observing a biogeographical
+history along a given phylogenetic tree.
+In this model, there are 3 processes which govern range evolution.
 The first two processes, dispersion and extinction, represent the stochastic range shifts over time, either newly
 occupying or vacating a region.
 The process is modeled as each region independently transitioning to a different state (either from full to empty or
-vise versa) with waiting times distributed exponentially based on the respective rate.
+vise versa) with waiting times distributed exponentially based on a parameterized rate.
 This is to say, for a region \( r_i \) which is full with extinction rate \( e \) the waiting time \( w \) for \( r_i \)
-to transition to empty is \( w \sim \text{Exp}(e) \) (or $w \sim \text{Exp}(d)$ to transition an empty region to a full
-region).
+to transition to empty is \( w \sim \text{Exp}(e) \), or $w \sim \text{Exp}(d)$ to transition an empty region to a full
+region.
 
 The third process is cladogenesis, I.E. when a parent species splits into two daughter species.
-When this occurs, some regions from the parent's range will be inherited by one daughter, and rest will be inherited by
-the other daughter.
-The particular way in which the parent ranges are inherited is governed by a set of scenarios.
-In the original Ree \textit{et. al.}\cite{ALikelihoodFrReeR2005} paper, these scenarios are simply labeled Scenario 1,
+During this, some regions from the parent's range will be inherited by one daughter, and rest will be inherited by the
+other.
+The particular way in which the parent ranges are inherited is restricted to a limited set of scenarios.
+In the original Ree \textit{et. al.}\cite{ALikelihoodFrReeR2005} paper, these scenarios are simply given as Scenario 1,
 2, and 3.
-However, the scenarios are intended to represent realistic cladogenesis methods.
-In the interest of clarity and memorability, we will use the more common names, similar to
-\citet{ModelSelectionMatzke2014} has done in their paper.
+These scenarios are intended to represent realistic cladogenesis methods, specifically allopatry, and sympatry, with an
+additional scenario added for single region cladogenesis event.
+In the interest of clarity and memorability, we will use the more common names, similar to how
+how it is described in \citet{ModelSelectionMatzke2014}.
 
-Informally, the three cladogenic scenarios possible in the strict DEC model are defined as follows: allopatry (or
-vicariance), where the daughter ranges are disjoint; sympatry, where the daughter species share some at least one range;
-and copy, where both daughter ranges are the same as the parent range.
-A copy cladogenic event is distinct from sympatric event as a copy event can only occur when the parent species occupies
-only a single region (is a singleton range).
+Informally, the scenarios possible in the strict DEC model are: allopatry (alternatively, vicariance), where the
+daughter ranges are disjoint; sympatry, where the daughter species share some at least one range; and copy, where both
+daughter ranges are the same as the parent's singluar range.
+Copy event is distinct from sympatric event as it can only occur when the parent range consists of only a single region
+(a singleton).
 We give a formal definition of cladogenesis events in Section~\ref{sec:formal-cladogenesis}.
 
 \citet{ModelSelectionMatzke2014} extended the set of cladogenesis events by adding a new ``jump" type, intended to
-represent ``founder-event speciation", where a small population becomes isolated via colonization of a new area.
-Additionally, \citet{ModelSelectionMatzke2014} also allowed for the relative probability of the cladogenesis events
+represent ``founder-event speciation", where a small population becomes isolated via colonization of a novel region.
+Additionally, \citet{ModelSelectionMatzke2014} also allowed for the relative probability of the cladogenesis events to
 vary.
-introducing weights for each of the different cladogenesis types such that a particular event type can be more likely
-than the others.
+Under this extension, sympatric events might have a larger weight, and therefore have a higher likelihood, than
+allopatric events.
+This pair of extensions are generally denoted as DEC+J, similar to how gamma rate categories are denoted as GTR+G4 in
+phylogenetic models.
+
+The parameters for the strict DEC model are rates for dispersion and extinction ($d$ and $e$), and a phylogenetic tree
+with branch lengths. 
+\decj{} adds the cladogenesis parameters $s$, $v$, $y$ and $j$, for sympatric, allopatric (vicariance), copy, and jump
+events respectively.
 
 \subsection{A Formal Definition of Cladogenesis Events}
 \label{sec:formal-cladogenesis}
 
-A cladogenesis event can be thought of as a tuple of ranges $(p, l, r)$, where $p$ is the parent range, and $l$ and $r$
-are the left and right child ranges, respectively. 
-An assumption by the DEC[+J] model is that speciation occurs instantaneously and is isolated to a single area, and
-therefore at least one of the daughter ranges ($l$ or $r$) will be a singleton.
-For the rest of this section, let $l$ be the singleton range, without loss of generality.
+We will represent a cladogenesis event as a tuple $(p, l, r)$, where $p$ is the parent range, $l$ is the left child
+range, and $r$ is the right child range.
+As an assumption by the DEC[+J] model, speciation occurs instantaneously and isolated to a single region.
+As such, at least one of the daughter ranges ($l$ or $r$) will be a singleton.
+For the rest of this section we will assume that $l$ is the singleton range, without loss of generality.
 
-When a cladogenesis event occurs the \textit{strict} DEC model assumes the probability of any event type is equal.
-This is to say, when considering if a particular cladogenesis result was of an allopatric or sympatric, \textit{strict}
-DEC considers these events to have equal weight.
-To compute the probability of a type of cladogenesis event over the set \(T = \left\{\text{Allopatry,
-Sympatry, Copy}\right\}\) we compute
+When a cladogenesis event occurs the \textit{strict} DEC model assumes equal probability for all event types.
+This is to say, when considering if a particular cladogenesis result is more likely to be allopatric or sympatric,
+\textit{strict} DEC considers these events to have equal weight.
+To compute the probability of a type of cladogenesis event over the set \(T = \left\{\text{Allopatry, Sympatry,
+Copy}\right\}\) we compute
 \[
 	P(t |
 	s) = \frac{C(t | p)}{\sum_{u \in T} C(u | p)},
@@ -208,13 +219,8 @@ Sympatry, Copy}\right\}\) we compute
 where \( C(t|p) \) is the count of cladogenesis events of type $t$ which are possible given the parent range, and $T$ is
 the set of all possible types.
 
-\citet{ModelSelectionMatzke2014} extended the cladogenesis probability computation by adding a new ``jump" type of
-cladogenesis event and incorporating weights for each cladogenesis type.
-The first addition, the ``jump" type, is intended to model ``founder events''.
-The second addition allows for different event types to be relatively more or less likely.
-This pair of modifications to the DEC model are generally denoted as DEC+J, similar to how gamma rate categories is
-denoted GTR+G4 in phylogenetic models.
-Under this modified model, the probability of a particular type of cladogenesis event is computed as
+The cladogenesis model is extended in \decj{} to include weights and an additional cladogenesis type.
+With this extended model, the probability computation becomes
 \begin{equation}
 	P(t | p) = \frac{w_t C(t | p)}{\sum_{u \in T} w_u C(u | p)},
 \end{equation}
@@ -224,9 +230,9 @@ Jump}\right\} \).
 Informally, ``jump" events are cladogenesis events which allows one of the daughter species to disperse to a unoccupied
 range.
 
-We define the cladogenesis event types as
+We define the cladogenesis event type as
 \begin{equation}
-T(e) = T(p, l, r) = 
+T(e) = T(p, l, r) := 
 \begin{cases}
   \text{Copy} & \text{if }l = r = p \\ 
   \text{Sympatric} & \text{if } \CountFull{\rand{l}{r}} = 1 \text{ and } \ror{l}{r} = p \\ 
@@ -236,88 +242,79 @@ T(e) = T(p, l, r) =
 \label{eq:clad-test}
 \end{equation}
 
-For the purposes of simulating a biogeographical history under the \decj{} model I have broken up the model into two
-phases: the evolution of a range \textit{along} a branch, which encompasses both extinction and dispersion; and the
-splitting of a range at cladogenesis.
-I call these two phases of simulation the spread and the split, respectively.
+\subsection{Additional Extensions to the \decj Model}
 
-% \subsection{Additional Extensions to the \decj Model}
-
-A common practice is to adjust for area connectivity by using a connectivity matrix (alternatively a distance
-matrix.)\footnotemark
-Here, a user supplies the connectivities as a matrix of scalers intended to represent the ease of movement
+A common practice during \decj{} analyses is include information about the ease of dispersions or jumps occurring
 between two areas.
-Commonly, these matrices are derived from the real distances between the two regions.
-These connectivities are then used to adjust the dispersion and jump rates between two areas $i$ and $j$ as
+This information normally takes the form of a connectivity graph, which represents the connectivity of two regions as a
+positive number.
+Often, researchers derive the pairwise region connectivities from the geographic distance between the two regions.
+The dispersion rate and jump weight between two regions $i$ and $j$ are then modified using the provided connectivities
+as
 \begin{align*}
   d_{ij} &= d c_{ij}^w \\
   j_{ij} &= j c_{ij}^w,
 \end{align*}
 where $w$ is an inferred parameter and $c_{ij}$ is the user supplied connectivity between $i$ and $j$.
 
-Some other authors make a distinction between connectivity and distance matrices.
+Some other authors might make a distinction between connectivity and distance matrices.
 However, whether a connectivity matrix or a distance matrix is used, the operation is the same.
 The only difference is the power of the exponent $w$: positive for connectivity matrices, and negative for
 distance matrices.
-As such, there will not be a distinction made here in this work.
+Given that they represent the same concept, we will not make a distinction between distance and connectivity matrices.
 
 \section{Methods}
 
 For the purposes of generating data under the DEC[+J] model, there are two phases to the simulation: range changes which
 occur along a branch (dispersion and extinction), and range changes which occur at speciation events (cladogenesis).
-For mnemonic reasons, we will refer to these phases the \textit{spread} and \textit{split} phases.
+For mnemonics, we will refer to these phases as the \textit{spread} and \textit{split} phases.
 
-For both phases, we have implemented two independent methods of data results, with the purpose of checking that the
+For both phases, we have implemented two independent methods of data simulation, with the goal of checking that the
 results of the two methods match. 
-Specifically, we have implemented independent methods with the goal of ensuring identical results between the two.
-The first method of simulating results (for both the spread and split phases) is rejection sampling.
-In rejection sampling, a random result is generated via a process utilize well known distributions and then checked for
-validity.
-If the result was invalid, it is rejected and a new result is generated, and if the result is valid, it is accepted.
-In general, rejection methods are very computationally inefficient, as for sufficiently complicated validity tests, many
-results will need to be generated before a result is accepted.
-However, they are extremely reliable and easy to implement.
-This is to say, they have a low chance of software errors.
+The first method of simulating results (for both the spread and split phases) is based on the pattern of rejection
+sampling.
+Rejection sampling is a method where the results of a distribution over a complicated sample (say $\Omega$) space is produced by
+first sampling from a distribution over a simpler sample space (say $\Omega'$). 
+If a sample drawn from $\Omega'$ is not in $\Omega$, then the sample is rejected as invalid, and the sample is drawn
+again.
+This process is repeated until a valid sample is drawn.
+Rejection sampling can be further modified such that non-uniform distributions are produced by rejecting drawn samples
+some proportion of the time in order to correct the bias.
+The precise probability of rejection in this case is dependant on the specific distributions, so we will specify that
+probability in detail when we discuss each method individually.
 
-In addition to the rejection method implementations, we additionally implemented 
-``fast" methods.
-These ``fast" methods implement two major categories of optimizations: analytic
-and operational.
-Here, an analytic optimization is where we derive a fast algorithm which
-analytically ought to generate the correct distribution of results.
-On the other hand, an operational optimization is where we implement the
-algorithm using efficient operations.
-However, just because an algorithm is analytically correct, does not mean it is
-\textit{numerically} correct\cite{goldberg_what_1991, noauthor_ieee_1985}.
+Rejection methods are extremely simple, and therefore are easy to implement correctly.
+The trade-off is that a substantial amount of time is spent on generating rejected samples, resulting in very
+computationally inefficient implementations.
+As such, they are typically only utilized when no other method capable of producing acceptable results.
 
-The other methods of simulating results we have implemented are analytic
-methods.
-These methods are analytically derived from, and are composed of, operations on
-``off the shelf" statistical distributions (E.g. Uniform, Normal, Exponential).
-That is, we find an algorithm which ought to generate the correct distribution
-of results.
-We discuss the details of these optimizations later.
+In addition to the rejection methods detailed above, we implemented so-called ``fast" methods.
+These ``fast" methods implement two major categories of improvements: analytic and CPU-aware optimizations.
+Here, an analytic optimization is where we derive a fast algorithm which analytically ought to generate the correct
+distribution of results.
+On the other hand, CPU-aware optimizations are when we implement the algorithm using operations which take advantage of
+the computational capabilities of the CPU.
+However, the analytically correctness of an algorithm does not imply that it is \textit{numerically} correct
+\cite{goldberg_what_1991, noauthor_ieee_1985}.
 
-With the independent implementations of both rejection and ``fast" methods, we
-can use them to check the results of each other.
-That is, by establishing that the results of the two methods are equivalent, in
-a rigorous statistical sense, we can establish that if there is a software bug,
-it must be present in both methods.
-However, the probability of the same software bug being present in both
-independent and markedly different implementations is extremely low.
-Therefore, if the results of the two methods are statistically equivalent, we
-can be extremely confident that the results are correct.
+With the independent implementations of both rejection and ``fast" methods, we can use them to check the results of each
+other.
+That is, by establishing that the results of the two methods are equivalent, in a rigorous statistical sense, we can
+establish that if there is a software bug, it must be present in both methods.
+However, the probability of the same software bug being present in both independent and markedly different
+implementations is extremely low.
+Therefore, if the results of the two methods produce statistically equivalent results, we can be confident that the
+results are correct.
+
+\todo[inline, color=green!20]{The text has been edited up to here. Beyond this is a rough draft.}
 
 \subsection{Simulating the Spread}
 
-As mentioned in Section~\ref{sec:model}, the evolution of a range along a branch is modeled as a Continuous Time Markov
-Chain (CTMC), analogous to the character evolution models used in phylogenetic inference.
-The CTMC can itself be modeled as a Poisson process, where the waiting time for a state change is drawn from an
-exponential distribution.
-
-The problem is this: given an initial range \( r \) with \( |r| = n \) regions, and a branch length \( t \), produce a
-final range which has undergone extinction and dispersion at rates \( e \) and \( d \), respectively.
-When a range experiences dispersion, it gains a region, and when a range experiences extinction, it loses a region. 
+A transition event is the tuple $(p, c, w)$, where $p$ is the parent range, $c$ is the child range, and $w$ is the
+waiting time between $p$ and $c$.
+As mentioned in Section~\ref{sec:model}, the evolution of a range along a branch is modeled as a Poisson process.
+The problem is: given an initial range \( r \) with \( |r| = n \) regions and branch length \( t \), produce a final range which
+has undergone the processes of extinction and dispersion at rates of \( e \) and \( d \), respectively.
 Each of the regions is treated as an independent process from each other.
 This observation is the basis for the rejection method of spread simulation: randomly generate \( n \) waiting times,
 labeled \( w_i \), for each region.
@@ -325,15 +322,16 @@ Specifically, the waiting times are distributed as
 \begin{equation}
 	\label{eq:exp-rejection} w_i \sim
 	\begin{cases}
-		\text{Exp}(e) & \text{if } r_i
-		= 1                            \\ \text{Exp}(d) & \text{if } r_i = 0.
+		\text{Exp}(e) & \text{if } r_i = 1 \\
+    \text{Exp}(d) & \text{if } r_i = 0.
 	\end{cases}
 \end{equation}
-Once all $n$ waiting times are generated, we pick the smallest, say $w_i$, and
-negate $r_i$.
-We repeat this process until the total waiting time exceeds the branch length,
-at which point we return a list of transition events, excluding the final event
-who's waiting time exceeded the branch length.
+Once all $n$ waiting times have been generated, we find $ i = \text{argmin}(w_i)$ and negate the corresponding
+region so that $r_i' := \rneg{r_i}$.
+The resulting transition event is then $(r, r', w_i)$.
+
+We repeat the above process until the total waiting time exceeds $t$, the sum of selected $w_i$'s, at which point the
+process halts, and we yield the list of transition events, excluding the final generated event.
 
 Keen readers might already be aware of the fact that if we have a set of
 independent processes like above, the entire set can be represented by a single
@@ -344,7 +342,7 @@ exponential distribution, with \(w \sim \text{Exp}(t) \) where
 This second method then is to compute \( t \) using Eq.~\ref{eq:exp-param},
 draw a waiting waiting time \( w \sim \text{Exp}(t) \).
 Once a time is rolled, we pick a region with weights equal to the exponential
-distribution parameter in Eq.~\ref{eq:exp-rejection}.
+distribution parameter in Eq.~\ref{eq:exp-rejection}.\todo{Maybe this should come first?}
 
 We implement both of the above methods, but only use the second to preform
 simulations.
