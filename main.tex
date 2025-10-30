@@ -11,6 +11,7 @@
 \usepackage{svg}
 \usepackage{relsize}
 \usepackage{todonotes}
+\usepackage[ruled, vlined]{algorithm2e}
 
 \bibliographystyle{abbrvnat}
 
@@ -112,6 +113,9 @@ method.
 Subsequently, we conduct statistical tests to verify that the results of the two independent implementations agree.
 Finally, we show that \bigrig{} is computationally efficient. 
 It can generate datasets for trees with tens of thousands of tips and 63 regions in under 0.5 \todo{check the time to be sure} seconds on a mid-range laptop.
+
+\todo[inline]{Simpify this section. Specifically, I need to explain why other simulators aren't typically used, and the
+difficulty of using RevBayes.}
 
 \section{Background}
 
@@ -299,18 +303,23 @@ implementations is extremely low \cite{sklaroff1976, taneja2010}.
 Therefore, if the results of the two methods produce statistically equivalent results, we can be confident that the
 results are correct.
 
-\todo[inline, color=green!20]{The text has been edited up to here. Beyond this is a rough draft.}
+% \todo[inline, color=green!20]{The text has been edited up to here. Beyond this is a rough draft.}
 
 \subsection{Simulating the Spread}
 
-A transition event is the tuple $(p, c, w)$, where $p$ is the parent range, $c$ is the child range, and $w$ is the
-waiting time between $p$ and $c$.
-As mentioned in Section~\ref{sec:model}, the evolution of a range along a branch follows a Poisson process.
-The problem is: given an initial range \( r \) with \( |r| = n \) regions and branch length \( t \), produce a final range which
-has undergone the processes of extinction and dispersion at rates of \( e \) and \( d \), respectively.
-Each of the regions is treated as an independent process from each other.
-This observation is the basis for the rejection method of spread simulation: randomly generate \( n \) waiting times,
-labeled \( w_i \), for each region.
+In the \decj{} model, the dispersion and extinction processes are modeled as a continous time markov chain (CMTC).
+CMTCs are themselves a generalization of many independent Poisson processes.
+We use this fact to draw samples to generate valid spread events.
+A spread event $e = (p, c, w)$, where $p$ is the parent range, $c$ is the child range, and $w$ is the waiting time
+between $p$ transition to $c$.
+For any spread event $p$ and $c$ differ by in only one region.
+More formally $\CountFull{\rxor{p}{c}} = 1$.
+
+The problem is this: given a range \( r \) with \( |r| = n \) regions and branch length \( t \), produce a final range
+which has undergone the processes of extinction and dispersion at rates of \( e \) and \( d \), respectively.
+Each region experiences either extinction or dispersion independently of each other.
+This observation is the basis for the rejection method of spread simulation: sample $n$ waiting times,
+labeled \( w_i \), one for each region.
 Specifically, the waiting times are distributed as
 \begin{equation}
 	\label{eq:exp-rejection} w_i \sim
@@ -319,137 +328,128 @@ Specifically, the waiting times are distributed as
     \text{Exp}(d) & \text{if } r_i = 0.
 	\end{cases}
 \end{equation}
-Once all $n$ waiting times have been generated, we find $ i = \text{argmin}(w_i)$ and negate the corresponding
+Once all $n$ waiting times have been sampled, we find $ i = \text{argmin}(w_i)$ and negate the corresponding
 region so that $r_i' := \rneg{r_i}$.
-The resulting transition event is then $(r, r', w_i)$.
+The resulting transition event is $(r, r', w_i)$.
 
-We repeat the above process until the total waiting time exceeds $t$, the sum of selected $w_i$'s, at which point the
+We repeat the above process until the total waiting, the sum of selected $w_i$'s, time exceeds $t$, at which point the
 process halts, and we yield the list of transition events, excluding the final generated event.
 
-Keen readers might already be aware of the fact that if we have a set of
-independent processes as above, the entire set can be represented via a single
-exponential distribution, with \(w \sim \text{Exp}(t) \) where
+Keen readers might already be aware of the fact that if we have a set of independent processes as above, the entire set
+can be represented via a single exponential distribution, with \(w \sim \text{Exp}(q) \) where
 \begin{equation}
-	\label{eq:exp-param} t = e \times \CountFull{r} + d \times \CountEmpty{r}.
+	\label{eq:exp-param} q = e \times \CountFull{r} + d \times \CountEmpty{r}.
 \end{equation}
-This second method then is to compute \( t \) using Eq.~\ref{eq:exp-param},
-draw a waiting waiting time \( w \sim \text{Exp}(t) \).
-Once a time is rolled, we pick a region with weights equal to the exponential
-distribution parameter in Eq.~\ref{eq:exp-rejection}.\todo{Maybe this should come first?}
+This second method then is to compute \( t \) using Eq.~\ref{eq:exp-param}, draw a waiting waiting time \( w \sim
+\text{Exp}(t) \).
+Once a time is sampled, we pick a region with weights equal to the exponential distribution parameter in
+Eq.~\ref{eq:exp-rejection}.
 
-We implement both of the above methods, but only use the second to preform
-simulations.
-The first method is used to check the results of the second method.
+We implement both of the above methods, but only use the second to generate samples in normal execution.
+The first method, the rejection method, is used to check the results of the second method, the faster method.
 
 \subsection{Simulating the Split}
 
-Note that a split can be viewed as an ordered triplet of binary numbers \(
-(p,l,r) \), where $p$ is the parent range and $l$ and $r$ are the respective child ranges.
-Therefore, we can simulate a split by generating two random numbers (the parent
-split $p$ is given), and rejecting invalid splits.
-That is, we accept splits which fall into one of the categories defined in
-Section~\ref{sec:model}.
-We present a C++ function to determine the split type given three
-\mintinline{c++}{uint64_t} (labeled \mintinline{c++}{dist_t}) in
-Listing~\ref{lst:determine-split-type}.
-Using this function, we reject any split that is of type
-\mintinline{c++}{split_type_e::invalid}, and accept otherwise.
+A split will be written as an ordered triplet of ranges \( (p,l,r) \), where $p$ is the parent range and $l$ and $r$ are
+the respective child ranges. 
+Given $p$, we can sample a split by sampling two random numbers from a uniform distribution, and rejecting invalid
+splits.
+That is, we accept splits which fall into one of the categories defined in Section~\ref{sec:model}.
 
-In order to implement the weighted split type introduced by Matzke in
-\cite{ModelSelectionMatzke2014}, we accept it with a probability that is equal to the
-normalized split weight.
-For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$,
-then a jump type split will be accepted with probability $j/(y + s + v +
-j)$.
+\begin{align}
+  P(\text{Sym} | p) &= \frac{\CountFull{p} \times 1 \times 2}{(2^2n)}
+\end{align}
+Because we there is one way to pick a region which equals $p$, and there are $\CountFull{p}$ ways to pick a region which
+is a singleton and a subset of $p$. Additionally, the left and right child can be swapped.
 
-To accelerate this process, we implement an optimized split
-simulation procedure.
-First, we generate the split type according to the split type weights.
-We need to cover two cases, singleton and non-singleton.
-In the singleton case, we generate a split type from $\{\text{jump},
-\text{copy}\}$, weighted accordingly.
-In the non-singleton case, we generate a split type from $\{\text{jump},
-\text{sympatry}, \text{allopatry}\}$, also weighted accordingly.
+By similar logic, there are $\CountFull{p}$ ways to pick a region such that $\CountFull{l} = \CountFull{p} - 1$. 
+Once $l$ has been picked, there is only one region which will produce a valid split event.
+Therefore, 
+\begin{align}
+  P(\text{Allo} | p) &= \frac{\CountFull{p} \times 1 \times 2}{(2^2n)}
+\end{align}
+which is equal to $P(\text{Sym} | p)$.
+Therefore, for distributions where $j = 0$, the probability of drawing either a sympatric or allopatric event is the
+correct.
+Additionally, since the probability of any particular $l$ and $r$ is equal given a split type, then all valid splits
+have the same probability.
 
-The total weight for each type is
+In the case when $j \neq 0$, then
+\begin{align}
+  P(\text{Jump} | p) &= \frac{\CountEmpty{p} \times 1 \times 2}{(2^2n)}
+\end{align}
+In order to implement the weighted split type introduced by Matzke in \cite{ModelSelectionMatzke2014}, we accept a
+sampled split event with probability that is equal to the normalized split weight.
+For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$, then a jump type split will be accepted
+with probability $j/(y + s + v + j)$.
+
+To accelerate this process, we implement an optimized split simulation procedure.
+First, we generate the split type according to the relative split event weights: $y, s, v,$ and $j$.
+Sampling is a split in this case is divided into two cases, the singleton case where $\CountFull{p} = 1$, and the
+non-singleton case.
+In the singleton case, we generate a split type from $\{\text{jump}, \text{copy}\}$, weighted accordingly.
+In the non-singleton case, we generate a split type from $\{\text{jump}, \text{sympatry}, \text{allopatry}\}$, also
+weighted accordingly.
+
+We compute the weight for each type as
 \begin{equation}
 	w_s = C(s|r) \times u_s
 \end{equation}
 where $C(s|r)$ is the count of feasible splits of type $s$ given a region $r$.
-For example, for region \texttt{11} there exit two ways to split it
-allopatrically: $(\texttt{10}, \texttt{01})$ and $(\texttt{01},
-\texttt{10})$\footnote{Left and right branches are distinguishable, so swaps
-	are also valid.}\footnotemark.
-Occasionally, it is convenient to refer to the normalized split weight, in
-which case we write \( \overline{w_s} \).
-The formulas for various counts are
+For example, for region \texttt{11} there exists two ways to split allopatrically: $(\texttt{10}, \texttt{01})$ and
+$(\texttt{01}, \texttt{10})$
+The exact formulas for various types are
 \begin{align*}
-  C(\text{allopatry}|r) & =
-  \CountFull{r} \times 2 - (2 \text{ if } \CountFull{r} = 2) \\
-  C(\text{sympatry}|r)  & = \CountFull{r} \times 2           \\ C(\text{jump}|r) & =
-  \CountEmpty{r} \times 2                                    \\ C(\text{copy}|r) & = 2 \\
+  C(\text{Allo}|r) = C(\text{Sym}|r)  & = \CountFull{r} \times 2 \\ 
+  C(\text{Jump}|r) & = \CountEmpty{r} \times 2 \\
+  C(\text{Copy}|r) & = 2 \\
 \end{align*}
 
-\footnotetext{
-  This result depends on the process used to count.
-	If a region is selected, and then the child to inherit that region is
-	selected, you get 4 ways to allopatrically split with 2 full regions.
-	That is, a process based counting method gets a different result, where the
-	process is a speciation event in a region, and then a random selection of the
-	child branch.}
-
-Once a split type has been simulated, we generate
-a split according to this type by initially determining which region will be
-flipped\footnotemark.
+Once a split type has been sampled, we generate a split according to this type by initially determining which region
+will be flipped\footnotemark.
 If the split type is a jump, the region is chosen from among the empty regions.
-If the split type is either allopatry or sympatry, the region is chosen from the
-full regions.
-Once the region is flipped, we randomly determine which child obtains which region,
-with uniform probability.
+If the split type is either allopatry or sympatry, the region is chosen from the full regions.
+Once the region is flipped, we randomly determine which child obtains which region, with uniform probability.
 
-\footnotetext{If the type is copy, we can simply return the tuple $(p, p, p)$
-where $p$ is the parent range.}
-
-\begin{listing}
-	\begin{minted}{c++}
-split_type_e determine_split_type(dist_t parent_dist, 
-                                  dist_t left_dist, 
-                                  dist_t right_dist) {
-  size_t diff_region_count =
-         (left_dist & right_dist).full_region_count();
-
-  if ((left_dist | right_dist) == parent_dist) {
-    if (left_dist == right_dist 
-        && left_dist.full_region_count() == 1) {
-      return split_type_e::singleton;
-    }
-
-    if (!left_dist.singleton() 
-        && !right_dist.singleton()) {
-      return split_type_e::invalid;
-    }
-
-    if (diff_region_count == 1) {
-      return split_type_e::sympatric;
-    }
-
-    if (diff_region_count == 0) {
-      return split_type_e::allopatric;
-    }
-  } else if (left_dist.singleton()
-             && diff_region_count == 0
-             && right_dist == parent_dist) {
-    return split_type_e::jump;
-  }
-  return split_type_e::invalid;
-}
-\end{minted}
-	\caption{A function to determine the split type given three numbers.}
-	\label{lst:determine-split-type}
-\end{listing}
+\footnotetext{If the type is copy, we can simply return the tuple $(r, r, r)$.}
 
 \subsubsection{Simulating a Phylogenetic Tree}
 
+Given a root range $r$, and parameters $d$, $e$ and $c$, and an age $t$, we can sample a phylogenetic tree with
+Algorithm~\ref{alg:tree-sample}.
+In short, a tree is sampled by starting with a root range $r$ and a tree age $t$. 
+The range $r$ is then evolved under the \decj{} process.
+Waiting times until an event, either a spread or split event, are sampled, and then the corresponding event is generated
+with $r$ as the parent range.
+When the waiting time for a branch exceeds $t$, the process halts.
+We recursively iterate over all branches utill all extant tips have a distance to the root of $t$.
+
+\begin{algorithm}
+  \SetKwFunction{KwFn}{SampleTree}
+  \SetKwProg{Fn}{Function}{:}{}
+
+  \Fn{\KwFn{$p,t,e,d,c$}}{
+  $u := d\CountFull{r} + e\CountEmpty{r}$\\
+  $w \sim \mathrm{Exp}(u + c)$\\
+  \If {$w > t$} { 
+    \Return
+  }
+  $t := t - w$\\
+  $l \sim \mathrm{Bernoulli}(\frac{u}{u+c})$\\
+  \If {$l == 1$} {
+    $(p, p', w) \sim \mathrm{Spread}(e,d)$\\
+    \If{ $p' = \emptyset$} { \Return }
+    \KwFn{$p',t,e,d,c$}\\
+  }
+  \Else {
+    $(p, l, r) \sim \mathrm{Split}(c)$\\
+    \KwFn{$l, t, e, d, c$}\\
+    \KwFn{$r, t, e, d, c$}\\
+    \Return
+  }
+}
+\caption{Sample tree under \decj \label{alg:tree-sample}}
+\end{algorithm}
 
 \subsection{Testing}
 
@@ -512,7 +512,6 @@ model parameters.
 
 Many thanks to Alexander I. Jordan from the Computational Statistics group at the Heidelberg Institute for Theoretical Studies for his assistance on deriving and
 implementing the statistical tests used to verify the results of \bigrig{}.
-
 
 \bibliography{references}
 
