@@ -448,7 +448,7 @@ We recursively iterate over all branches utill all extant tips have a distance t
     \Return
   }
 }
-\caption{Sample tree under \decj \label{alg:tree-sample}}
+\caption{Sample a tree under \decj, given a deadline $t$. \label{alg:tree-sample}}
 \end{algorithm}
 
 \subsection{Testing}
@@ -462,49 +462,78 @@ time.
 \subsubsection{Spread}
 
 For ensuring correct results and implementations, we conduct two types of tests.
-The first test pre-computes the expected value of the waiting time given the model parameters, and performs a t-test
-against that expected value.
-We compute 1,886,084,219 iterations of the spread function, which allows us to be 99.999\% confident that the error is
+The first test computes the expected value of the waiting time given the model parameters analytically, and performs a
+t-test against that expected value.
+We compute 1,886,084,219 samples of the spread distribution, which allows us to be 99.999\% confident that the error is
 less than 0.0001.
-We perform this test for 7 different regions and 16 different parameter sets.
+We perform this test for 7 different initial ranges with, each with a size of 4 areas, and 16 different parameter sets,
+for a total of 116 separate tests.
 
 The second test is a regression test against the rejection method.
 We again run both methods for 1,886,084,219 iterations, which again ensures that the error is less than 0.0001 with
 99.999\% confidence.
-We perform this test for 5 different initial regions and 16 different parameter sets.
+Furthermore, we also perform this test for 5 different initial ranges, each with a size of 4 areas, and 16 different
+parameter sets, for a total of 80 separate tests.
 
 Finally, we conducted a $\chi^2$ test to ensure that regions are being picked at the expected rate.
+For this test, we enabled either dispersion or extinction, including both, and computed the expected number of
+substitutions for each area given the initial range.
+With this initial region, we sampled 1000 spread events, and the utilized a $\chi^2$ test to ensure the realized
+distribution matches the expected distribution.
+We reject the hypothesis that the two distributions are equivalent with $\alpha=0.0001$, I.E. we reject with 99\%
+confidence.
 
 \subsubsection{Split}
 
-We compute a sample of 2,019,696,124 split events, and compare this sample against the expected distribution.
-This gives a probability of either type I or type II errors equal to 0.00001, with a deviation from the expected value
-of 0.0001.
+We compute a sample of 2,019,696,124 split events, and compare this sample against the expected distribution of
+cladogenesis event types using a G test.
+This gives a probability of either type I or type II error occurring at 0.00001, with a maximum deviation from the
+expected value of 0.0001.
+Please see the supplemental material for full derivation of these values.
+We perform a test for each of 6 initial ranges and 5 cladogenesis parameters for a total of 30 tests.
 
-Likewise, we also compare the results of the rejection method with the fast method.
-We compute a sample of 201,970 split events from each of the methods, and compare the two samples to ensure they are
-equivalent.
+Likewise, we also compare the results of the rejection method with the analytical method.
+Due to the expensive nature of rejection sampling, we limit our sample size to 201,970 split events from each of the
+methods.
+We then use the same G test to compare the results.
+We perform this test for 6 initial ranges and 5 sets of cladogenesis parameters for a total of 30 tests.
 
-Finally, we conducted a $\chi^2$ test to ensure that the splitting region is distributed as expected.
+Finally, we conducted a $\chi^2$ test to ensure that regions are distributed as expected between the child regions.
+For event types Sympatry, Allopatry, and Jump, we sample a split event of the specified type and determine the singleton
+region.
+We then ensure that realized counts match the expected counts with a $\chi^2$ test with rejection threshold of $\alpha =
+0.0001$.
 
 \subsection{Benchmarks}
 
 We also sought to evaluate the performance of \bigrig{}.
-We generated 10 random rooted ultrametric trees with $2^i, 3 < i < 16$ each, for a total of 140 trees.
+We generated 10 random rooted ultrametric trees with $2^i, 3 \leq i \leq 16$ each, for a total of 140 trees.
 These trees were generated via a Yule process, and then the branch lengths scaled so that the tree hight was equal to
 1.0.
 For each tree generated, we generated 10 random ranges of size $3, 7, 15, 31$, along with the CMTC model parameters $e,d
-\sim \mathrm{Uniform}(0,1)$ for a total of 50 datasets for each tree, 10 for each range size.
+\sim \mathrm{Uniform}(0,1)$ for a total of 50 datasets for each tree, 10 for each range size, for a total of 7000
+trials.
 Cladogenesis parameters were set to $s = v = y = 1$ and $j=0$ for all trials.
-We implemented this pipeline in Snakemake \todo{cite} and we recorded execution times with the Linux tool \texttt{perf}
-\todo{cite}.
+We implemented this pipeline in Snakemake \todo{cite} and we measured execution times with the Linux tool
+\texttt{perf} \todo{cite}.
+The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
+utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
+
+\todo[inline]{Should I also add tree sampling benchmarks?}
 
 \section{Results}
 
 For all tests we conducted, \bigrig{} passed.
+As each statistical test can be considered independent, we can estimate the probability of an implementation error in
+\bigrig{} going undetected as the product of a type I error for each test.
+To be explicit, the probability of an undetected error is nearly 0, and we can be nearly certain that no such bug exists
+in \bigrig{}.
 
-The mean time for execution varies from 0.0042 seconds with 3 ranges to 0.0066 seconds with 63 ranges. The minimum time
-over all trials was 0.000004 seconds, and the max time was 0.080672 seconds.
+In general, \bigrig{} is extremely fast, as can be seen in the Fig.~\ref{fig:runtime-taxa}. The mean time for execution
+varies from 0.0042 seconds with 3 ranges to 0.0066 seconds with 63 ranges. The minimum time over all trials was 0.000004
+seconds, and the max time was 0.081 seconds.
+
+\todo[inline]{text about the impact of the jump parameter on execution time}
 
 \begin{figure}
     \centering
@@ -520,6 +549,26 @@ over all trials was 0.000004 seconds, and the max time was 0.080672 seconds.
 \end{figure}
 
 \section{Conclusion}
+
+We have presented \bigrig{}, a reliable, fast, and easy to use tool to generate simulated historical biogeography
+datasets.
+We have shown that \bigrig{} has a negligible chance of having a software implementation error.
+We have also show that it is extremely fast, capable of generating a dataset in under a second which is far beyond the
+ability of any current inference software to infer.
+
+In the future, we wish extend the features of \bigrig{} to include dataset generation for the family of State Specific
+Evolution (SSE) models (BiSSE, GeoSSE, ClaSSE) \todo{cite}.
+The primary purpose of these extensions is to test the robustness of \decj{} models to model violations, in order to
+asses the added value of these models.
+This analysis is important for future tool development, as the more advanced SSE member models cannot be inferred using
+the typical CMTC computational framework use for \decj{}.
+However, at this time it seems like these models will exhibit similar scaling as \decj{} as all models here share the
+exponential scaling of their state space.
+
+Investigating exactly when \decj{} fails to give adequate results will help both users and tool developers to
+efficiently utilize their scarce resources.
+In the case of users, it will help conserve compute time, and in the case of tool developers it will help conserve
+developer time.
 
 \section{Acknowledgements}
 
