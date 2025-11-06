@@ -70,10 +70,16 @@ Overall, there does not exist a reliable source of known ancestral ranges and as
 Therefore one must turn to simulations in order to verify the correctness of respective software tools.
 To date, biogeographical data simulations under the DEC[+J] model have often been implemented in an ad hoc manner,
 with individual tools implementing their own simulation framework \cite{matzke_statistical_2022,
-bettisworth_lagrange-ng_2023}, even though tools which can generate simulated data do exist \cite{hohna_revbayes_2016}.
-Sometimes, these simulations utilize the same code base for the inference of ancestral ranges and corresponding model parameters.
-In such cases it is more likely that a software error in the model inference will also corrupt simulation results.
+bettisworth_lagrange-ng_2023}, even though tools which can generate simulated data do exist (E.g. RevBayes
+\cite{hohna_revbayes_2016}).)
+Indeed, RevBayes is capable of generating data under nearly any model, but this comes at the cost of usability, as the
+user must specify the model themselves.
+This model specification task is non-trivial, and without expertise there is a high risk of inadvertently specifying an
+incorrect model.
 
+Additionally, these simulations utilize the same code base for the inference of ancestral ranges and corresponding model
+parameters.
+In such cases it is more likely that a software error in the model inference will also corrupt simulation results.
 Instead of implementing ad hoc simulations for each software project, developing an independent stand-alone 
 simulation software for a model (or class of models) reduces the aforementioned error margin.
 Separating simulation from inference code, as mentioned above, reduces the chances of integrated bugs in both the simulation
@@ -95,8 +101,8 @@ By using a common standard to evaluate tools one can ensure that improved perfor
 A common simulator also decreases the amount of work required to implement a new inference tool, as a fast and reliable method of generating testing data can be utilized by developers in the context of iterative development cycles.
 This will have the (eventual) result of increasing the number of tools available, and will increase the overall quality of tooling.
 
-In this paper we present \bigrig{}, a simulator for the \decj{} \todo{And possibly a limited version of GeoSSE} model
-which complies with all of the aforementioned criteria for simulators.
+In this paper we present \bigrig{}, a simulator for the \decj{}  model which complies with all of the aforementioned
+criteria for simulators.
 We explain the the \decj{} model in detail in Section~\ref{sec:model}.
 Given a set of \decj{} parameters and a phylogenetic tree, \bigrig{} will generate a range dataset  for the taxa at the
 tips of the tree.
