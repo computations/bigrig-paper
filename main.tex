@@ -519,7 +519,8 @@ These trees were generated via a Yule process, and then the branch lengths scale
 For each tree generated, we generated 10 random ranges of size $3, 7, 15, 31$, along with the CMTC model parameters $e,d
 \sim \mathrm{Uniform}(0,1)$ for a total of 50 datasets for each tree, 10 for each range size, for a total of 7000
 trials.
-Cladogenesis parameters were set to $s = v = y = 1$ and $j=0$ for all trials.
+Two sets of cladogenesis parameters were used, without jumps ($s = v = y = 1, j=0$) and with jumps ($s = c = y = j = 1$)
+for all trials.
 We implemented this pipeline in Snakemake \todo{cite} and we measured execution times with the Linux tool
 \texttt{perf} \todo{cite}.
 The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
