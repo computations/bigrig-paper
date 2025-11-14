@@ -72,7 +72,7 @@ organisms; or a geographical distribution which is unsuited for fossilization \c
 Overall, there does not exist a reliable source of known ancestral ranges and associated phylogenetic trees. Therefore
 one must turn to simulations in order to verify the correctness of respective software tools.
 To date, biogeographical data simulations under the DEC[+J] model have often been implemented in an ad hoc manner, with
-individual tools implementing their own simulation framework \citep{matzke_statistical_2022,
+individual tools implementing their own simulation framework for the purposes of testing \citep{matzke_statistical_2022,
 bettisworth_lagrange-ng_2023}, even though tools which can generate simulated data do exist (E.g. RevBayes
 \citep{hohna_revbayes_2016}).)
 Indeed, RevBayes is capable of generating data under nearly any model, but this comes at the cost of usability, as the
@@ -388,8 +388,8 @@ Therefore,
   P(\text{Allo} | p) &= \frac{\CountFull{p} \times 1 \times 2}{(2^2n)}
 \end{align}
 which is equal to $P(\text{Sym} | p)$.
-Therefore, for distributions where $j = 0$, the probability of drawing either a sympatric or allopatric event is the
-correct.
+Therefore, for distributions where $j = 0$ and $s = v$, the probability of drawing either a sympatric or allopatric
+event is the same.
 Additionally, since the probability of any particular $l$ and $r$ is equal given a split type, then all valid splits
 have the same probability.
 
@@ -531,12 +531,13 @@ We also sought to evaluate the performance of \bigrig{}.
 In our initial investigations, we found that the time to generate data was dependent on several model parameters,
 in particular the tree height and the cladogenesis parameters.
 Therefore, we sought to assess both the typical performance and the extreme performance of \bigrig{}.
-
 We generated 10 random rooted ultrametric trees with $2^i, 3 \leq i \leq 16$ each, for a total of 140 trees.
 These trees were generated via a Yule process, with the branch lengths scaled so that the tree height was equal to 1.0.
 For each tree generated, we generated 10 random ranges of size $3, 7, 15, 31$, along with the CMTC model parameters $e,d
-\sim \mathrm{Uniform}(0,1)$ and cladogenesis parameters from either without jumps ($s = v = y = 1, j=0$) or with jumps
+\sim \mathrm{Uniform}(0,1)$ and cladogenesis parameters from either without jumps ($s = v = y = 1, j = 0$) or with jumps
 ($s = c = y = j = 1$).
+The first cladogenesis parameter set is the fixed parameters used in the original DEC, whereas the second parameter set
+simply "enables" jumps to occur, I.E. converts the model to \decj{}.
 This yields 10 datasets for each tree, 20 datasets for each range size, for a total of 14,000 datasets.
 We implemented this pipeline in Snakemake\citep{molder2021} and we measured execution times with the Linux tool
 \texttt{perf}.
@@ -599,8 +600,8 @@ The primary purpose of these extensions is to test the robustness of \decj{} mod
 asses the added value of these models.
 This analysis is important for future tool development, as the more advanced SSE member models cannot be inferred using
 the typical CMTC computational framework use for \decj{}.
-However, at this time it seems like these models will exhibit similar scaling as \decj{} as all models here share the
-exponential scaling of their state space.
+However, at this time it seems like these models will exhibit similar scaling during inference as \decj{} as all models
+here share the exponential scaling of their state space.
 
 Investigating exactly when \decj{} fails to give adequate results will help both researchers and tool developers to
 efficiently utilize their scarce resources.
