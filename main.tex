@@ -14,9 +14,8 @@
 
 \bibliographystyle{sysbio}
 
-\title{\texttt{bigrig}: A historical biogeography range simulator for the
-	DEC[+J]}
-\author{Ben Bettisworth}
+\title{\texttt{bigrig}: A range simulator for the DEC[+J] model}
+\author{Ben Bettisworth and Alexis Stamatakis}
 
 \newcommand{\CountFull}[1]{|#1|_\text{full}}
 \newcommand{\CountEmpty}[1]{|#1|_\text{empty}}
@@ -28,6 +27,8 @@
 \newcommand{\rxor}[2]{#1 \oplus #2}
 \newcommand{\rLshift}[2]{#1 \ll #2}
 \newcommand{\rRshift}[2]{#1 \gg #2}
+
+\todostyle{ingreen}{color = green!40, inline}
 
 \begin{document}
 
@@ -128,7 +129,7 @@ Finally, we show that \bigrig{} is computationally efficient.
 It can generate datasets for trees with tens of thousands of tips and 63 regions in under 0.5 seconds on a mid-range
 laptop.
 
-\todo[inline]{Simpify this section. Specifically, I need to explain why other simulators aren't typically used, and the
+\todo[ingreen]{Simpify this section. Specifically, I need to explain why other simulators aren't typically used, and the
 difficulty of using RevBayes.}
 
 \section{Background}
@@ -146,7 +147,6 @@ We write the number of full regions a range has as \( \CountFull{r} \), and the 
 We denote the value of the $i$th region of a range as $r_i$.
 In practice and for simplicity's sake, we represent ranges as binary strings, with $1$ indicating a full region, and $0$
 denoting an empty region.
-\todo{Maybe an example?}
 
 For the regions $r$ and $s$ we denote the \textit{bitwise and} operation as $\rand{r}{s}$, the \textit{bitwise or} as
 $\ror{r}{s}$, the \textit{bitwise exclusive or} as $\rxor{r}{s}$, and the \textit{bitwise negation} as $\rneg{r}$.
@@ -478,6 +478,8 @@ To this end, we implemented our tests in C++, using the core functions of \bigri
 Writing the tests in a performant language like C++ allows us to compute large sample sizes in a reasonable amount of
 time.
 
+\todo[ingreen]{Add softwipe text}
+
 \subsubsection{Spread}
 
 For ensuring correct results and implementations, we conduct two types of tests.
@@ -544,7 +546,7 @@ We implemented this pipeline in Snakemake\citep{molder2021} and we measured exec
 The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
 required to utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
 
-\todo[inline]{Should I also add tree sampling benchmarks?}
+\todo[ingreen]{Should I also add tree sampling benchmarks?}
 
 \section{Results}
 
@@ -570,6 +572,8 @@ This can be seen as well in Fig.~\ref{fig:runtime-taxa}, as the increase in exec
 taxa is much larger than the standard deviation (the grey shaded region).
 Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx 8
 \times 10^{-12}$.
+
+\todo[ingreen]{Add softwipe results}
 
 \begin{figure}
     \centering
@@ -613,7 +617,11 @@ developer time.
 Many thanks to Alexander I. Jordan from the Computational Statistics group at the Heidelberg Institute for Theoretical
 Studies for his assistance on deriving and implementing the statistical tests used to verify the results of \bigrig{}.
 
+\todo[ingreen]{Add eu grant number and flag}
+
 \section{Data Availability}
+
+\todo[ingreen]{Upload scripts to github, link the urls here}
 
 \bibliography{references}
 
