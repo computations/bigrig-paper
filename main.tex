@@ -152,7 +152,7 @@ As such, computation of these operations (and functions which are composed of th
 \footnotetext{This is due to the capabilities of modern CPUs to potentially execute more than one instruction per cycle,
 depending on the which instructions are executed.}
 
-\subsection{A Summary of the DEC model and its Variants} \label{sec:model}
+\subsection{An Overview of \decj{}} \label{sec:model}
 
 The Dispersion, Extinction, and Cladogenesis (DEC) model defines the probability of observing a given biogeographical
 history along a fixed phylogenetic tree with branch lengths.
@@ -200,12 +200,11 @@ events, respectively.
 \subsection{A Formal Definition of Cladogenesis Events}
 \label{sec:formal-cladogenesis}
 
-We will represent a cladogenesis event as a tuple $(p, l, r)$, where $p$ is the parent range, $l$ is the left child
-range, and $r$ is the right child range.
-The DEC[+J] model assumes that range inheritance under speciation occurs at an instant in time and is confined to a
-single region.
-Speciation is modeled as taking place in that single region.
-Hence, at least one of the daughter ranges ($l$ or $r$) will be a singleton.
+We will represent a cladogenesis event as the tuple $(p, l, r)$, where $p$ is the parent range, and $l$ and $r$ are the
+left and right child ranges, respectively.
+The DEC[+J] model assumes that specitation (and therefore range inheritance) occurs at an instant in time and is
+restricted to a single region.
+This implies that at least one of the daughter ranges ($l$ or $r$) will be a singleton.
 For the remainder of this section and without loss of generality, we assume that $l$ is the singleton range.
 
 When a cladogenesis event occurs, the \textit{strict} DEC model assumes equal probability for all event types.
@@ -217,10 +216,10 @@ Copy}\right\}\) we compute
 	P(t |
 	s) = \frac{C(t | p)}{\sum_{u \in T} C(u | p)},
 \]
-where \( C(t|p) \) is the count of possible cladogenesis events of type $t$ given the parent range, and $T$ is
-the set of \textit{all} possible event types.
+where \( C(t|p) \) is the count of possible cladogenesis events of type $t$ given $p$, and $T$ is the set of
+\textit{all} possible event types.
 
-The cladogenesis model is extended in \decj{} by including weights and an additional cladogenesis type.
+This cladogenesis model is extended in \decj{} by including weights and an additional cladogenesis type.
 Under this extended model, we compute the probability as 
 \begin{equation*}
 	P(t | p) = \frac{w_t C(t | p)}{\sum_{u \in T} w_u C(u | p)},
@@ -243,26 +242,26 @@ T(e) = T(p, l, r) :=
 \label{eq:clad-test}
 \end{equation*}
 
-\subsection{Further \decj Model Extensions}
-
-A common practice in \decj{} analyses is to include information about the ease of dispersions or jumps occurring
-between two regions.
-This information is typically provided via a connectivity graph, which represents the connectivity between pairs of
-regions by a positive number.
-These connectivities are often derived by using the geographic distance between a pair of regions.
-Then, the dispersion rate and jump weight between a region pair $i$ and $j$ are modified via the provided connectivities
-as
-\begin{align*}
-  d_{ij} &= d c_{ij}^w \\
-  j_{ij} &= j c_{ij}^w,
-\end{align*}
-where $w$ is an inferred parameter and $c_{ij}$ is the user-supplied connectivity between $i$ and $j$.
-
-Some other authors might distinguish between connectivity and distance matrices.
-However, regardless of whether a connectivity matrix or a distance matrix is used, the primary mathematical operations
-are identical.
-The only difference is the exponent $w$: it is positive for connectivity matrices, and negative for distance matrices.
-Given that they represent the same underlying concept, we will use connectivity matrix to refer to either matrix.
+%\subsection{Further \decj Model Extensions}
+%
+%A common practice in \decj{} analyses is to include information about the ease of dispersions or jumps occurring
+%between two regions.
+%This information is typically provided via a connectivity graph, which represents the connectivity between pairs of
+%regions by a positive number.
+%These connectivities are often derived by using the geographic distance between a pair of regions.
+%Then, the dispersion rate and jump weight between a region pair $i$ and $j$ are modified via the provided connectivities
+%as
+%\begin{align*}
+%  d_{ij} &= d c_{ij}^w \\
+%  j_{ij} &= j c_{ij}^w,
+%\end{align*}
+%where $w$ is an inferred parameter and $c_{ij}$ is the user-supplied connectivity between $i$ and $j$.
+%
+%Some other authors might distinguish between connectivity and distance matrices.
+%However, regardless of whether a connectivity matrix or a distance matrix is used, the primary mathematical operations
+%are identical.
+%The only difference is the exponent $w$: it is positive for connectivity matrices, and negative for distance matrices.
+%Given that they represent the same underlying concept, we will use connectivity matrix to refer to either matrix.
 
 \section{Methods}
 
@@ -357,14 +356,14 @@ A split will be written as an ordered triplet of ranges \( (p,l,r) \), where $p$
 the respective child ranges. 
 Given $p$, we can sample a split by sampling two random numbers from a uniform distribution, and rejecting invalid
 splits.
-That is, we accept splits which fall into one of the categories defined in Section~\ref{sec:model}.
+That is, we accept splits which are sympatric with the probability
 
 \begin{align*}
   P(\text{Sym} | p) &= \frac{\CountFull{p} \times 1 \times 2}{(2^2n)}
 \end{align*}
-Because there is one way to pick a region which equals $p$, and there are $\CountFull{p}$ ways to pick a region which is
+as there is one way to pick a region which equals $p$, and there are $\CountFull{p}$ ways to pick a region which is
 both a singleton and a subset of $p$. 
-Additionally, the left and right child can be swapped.
+Furthermore, the left and right child can be swapped.
 
 By similar logic, there are $\CountFull{p}$ ways to pick a region such that $\CountFull{l} = \CountFull{p} - 1$. 
 Once $l$ has been picked, there is only one region which will produce a valid split event.
@@ -384,13 +383,13 @@ In the case when $j \neq 0$, then
 \end{align}
 In order to implement the weighted split type introduced by Matzke in \cite{ModelSelectionMatzke2014}, we accept a
 sampled split event with probability that is equal to the normalized split weight.
-For example, if the split type weights are $y = 1.0, s = 1.0, v = 1.0, j=1.0$, then a jump type split will be accepted
-with probability $j/(y + s + v + j)$.
+For example, if the split type weights are $y = s = v = j = 1.0$, then a jump type split will be accepted with
+probability $j/(y + s + v + j)$.
 
 To accelerate this process, we implement an optimized split simulation procedure.
-First, we generate the split type according to the relative split event weights: $y, s, v,$ and $j$.
-Sampling is a split in this case is divided into two cases, the singleton case where $\CountFull{p} = 1$, and the
-non-singleton case where $\CountFull{p} > 1$.
+First, we generate the split type according to the relative split event weights ($y, s, v,$ and $j$).
+Sampling a split is divided into two cases, the singleton case where $\CountFull{p} = 1$, and the non-singleton case
+where $\CountFull{p} > 1$.
 In the singleton case, we generate a split type from $\{\text{jump}, \text{copy}\}$, weighted accordingly.
 In the non-singleton case, we generate a split type from $\{\text{jump}, \text{sympatry}, \text{allopatry}\}$, also
 weighted accordingly.
@@ -409,13 +408,12 @@ The exact formulas for various types are
   C(\text{Copy}|r) & = 2 \\
 \end{align*}
 
-Once a split type has been sampled, we generate a split according to this type by initially determining which region
-will be flipped\footnotemark.
+Once a split type has been sampled, we generate a the daughter ranges according to the type by randomly picking which
+region will be flipped.
 If the split type is a jump, the region is chosen from among the empty regions.
 If the split type is either allopatry or sympatry, the region is chosen from the full regions.
-Once the region is flipped, we randomly determine which child obtains which region, with uniform probability.
-
-\footnotetext{If the type is copy, we can simply return the tuple $(r, r, r)$.}
+Once the region is flipped and two regions are produced, we randomly determine which child obtains the singleton region,
+with probability $0.5$.
 
 \subsubsection{Simulating a Phylogenetic Tree}
 
@@ -462,8 +460,6 @@ statistical rejection testing with extremely large sample sizes to minimize the 
 To this end, we implemented our tests in C++, using the core functions of \bigrig{} as a library.
 Writing the tests in a performant language like C++ allows us to compute large sample sizes in a reasonable amount of
 time.
-
-\todo[ingreen]{Add softwipe text}
 
 \subsubsection{Spread}
 
@@ -531,13 +527,15 @@ We implemented this pipeline in Snakemake\citep{molder2021} and we measured exec
 The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
 required to utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
 
-\todo[ingreen]{Should I also add tree sampling benchmarks?}
+In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe \citep{zapletal2021}.
+Softwipe assess the code quality via a series of hureistics, and then produces a score between 0 and 10, with 0 being
+low quality, and 10 being high quality.
 
 \section{Results}
 
 For all tests we conducted, \bigrig{} passed.
 That is, all methods produced results which were equivalent between the rejection and analytic methods, and each
-analytical methods produced the expected distribution.
+analytical methods produdo we have a list of softwipe ced the expected distribution.
 As each statistical test can be considered independent, we can estimate the probability of an implementation error in
 \bigrig{} going undetected as the product of a type I error for each test.
 To be explicit, the probability of an undetected error is nearly 0, and we can be nearly certain that no such bug exists
@@ -558,7 +556,8 @@ taxa is much larger than the standard deviation (the grey shaded region).
 Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx 8
 \times 10^{-12}$.
 
-\todo[ingreen]{Add softwipe results}
+Softwipe evaluated the \bigrig{} code to have a software score of 8.5, indicating a very high quality of software. For
+comparision, this places it in the top 10\% of software evaluated by Softwipe. \todo{check percentile}
 
 \begin{figure}
     \centering
