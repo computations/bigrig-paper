@@ -527,7 +527,7 @@ We implemented this pipeline in Snakemake\citep{molder2021} and we measured exec
 The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
 required to utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
 
-In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe \citep{zapletal2021}.
+In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe v0.2 \citep{zapletal2021}.
 Softwipe assess the code quality via a series of hureistics, and then produces a score between 0 and 10, with 0 being
 low quality, and 10 being high quality.
 
@@ -556,8 +556,8 @@ taxa is much larger than the standard deviation (the grey shaded region).
 Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx 8
 \times 10^{-12}$.
 
-Softwipe evaluated the \bigrig{} code to have a software score of 8.5, indicating a very high quality of software. For
-comparision, this places it in the top 10\% of software evaluated by Softwipe. \todo{check percentile}
+Softwipe evaluated the \bigrig{} code to have a software score of 8.5, indicating a very high quality of software. 
+This indicates that \bigrig{} is among the tools with the highest software quality.
 
 \begin{figure}
     \centering
