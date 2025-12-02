@@ -42,19 +42,21 @@
 \maketitle
 
 \abstract{
-Quality software tools for science are, as a necessity, rigorously tested and verified.
+Quality software tools for science need to be rigorously tested and verified. 
 However, there is a major challenge to testing software used for phylogenetics and similar analysis.
-There is a shortage of ground truth data which can be used for validation, resulting in a reliance on simulated data.
-This reliance on simulated data results in a second challenge: the verification of the tool which generates the
+As a field, we have a shortage of ground truth data which can be used for validation, resulting in a reliance on
 simulated data.
+This reliance on simulated data results in a second challenge: verifying the correctness of the tool which
+generates the simulated data.
 In historical biogeography, software which simulated data has exclusively been implemented on an ad-hoc basis to verify
 specific tools.
 Here, we introduce \bigrig{}, a simulator for the \decj{} model of range evolution.
-We show that \bigrig{} is correct with extremely rigorous statistical testing and validation, ensuring that results
-deviate by no more than 0.0001 with 99.999\% confidence.
+We show that \bigrig{} is correct via rigorous statistical testing and validation using two completely independent
+simulation algorithms
+We show thawt results between these independent implementations do not deviate by more than 0.0001 with 99.999\%
+confidence.
 We also show that \bigrig{} is extremely fast, capable of generating data for trees with tens of thousands of tips in
 under a second.
-\bigrig{} is available as open source software under a GPL2 license.
 }
 
 \section{Introduction}
