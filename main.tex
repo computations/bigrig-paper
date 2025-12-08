@@ -15,6 +15,8 @@
 \usepackage{lineno}
 \usepackage{microtype}
 \usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{siunitx}
 
 \bibliographystyle{sysbio}
 
@@ -93,7 +95,7 @@ Despite this, the use of simulated data is still ubiquitous for software verific
 exists.
 
 However, software simulators are subject to the same concerns as inference software, specifically the presence of
-software errors can subtly corrupt the results.
+software errors can subtly corrupt the results
 For example, these simulations might utilize the same code base for the inference of ancestral ranges and corresponding
 model parameters. 
 In such cases, it becomes more likely that a software error in the model inference will also corrupt simulation results.
@@ -555,7 +557,6 @@ We benchmarked each range and tree size pair 10 times, for a total of 200 trials
 Furthermore, we measured the execution time of 10 independent runs for each trial, for a total of 2000 execution time
 measurements.
 
-
 In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe v0.2 \citep{zapletal2021}.
 Softwipe assess the code quality via a series of hureistics, and then produces a score between 0 and 10, with 0 being
 low quality, and 10 being high quality.
@@ -604,20 +605,43 @@ This indicates that \bigrig{} is among the tools with the highest software quali
 \end{figure}
 
 \begin{table}
+  \sisetup{table-alignment-mode = format}
   \begin{center}
-    \begin{tabular}[c]{l|l|l|l}
+    \begin{tabular}[c]{l|l|@{}
+      S[round-mode = places, round-precision = 1, exponent-mode = scientific, table-format = 2.1e2] |
+      S[round-mode = places, round-precision = 1, exponent-mode = scientific, table-format = 2.1e2]
+    @{}}
       \hline
-      \multicolumn{1}{c}{\textbf{Range}} & 
+      \multicolumn{1}{c|}{\textbf{Ranges}} & 
       \multicolumn{1}{c|}{\textbf{Taxa}} &
-      \multicolumn{1}{c}{\textbf{\bigrig{}}} &
-      \multicolumn{1}{c}{\textbf{BioGeoBEARS}} \\
+      {\textbf{\bigrig{}}} &
+      {\textbf{BioGeoBEARS}} \\
       \hline
-
-      7 & 4096 & 0.0001 & 38.99\\
+      \multirow{10}*{3} & 8    & 0.000009 & 0.000891\\
+                        & 16   & 0.000019 & 0.001756\\
+                        & 32   & 0.000034 & 0.003286\\
+                        & 64   & 0.000062 & 0.006493\\
+                        & 128  & 0.000105 & 0.013636\\
+                        & 256  & 0.000185 & 0.025998\\
+                        & 512  & 0.000388 & 0.049750\\
+                        & 1024 & 0.000772 & 0.097324\\
+                        & 2048 & 0.001290 & 0.193900\\
+                        & 4096 & 0.002071 & 0.392399\\
+      \hline
+      \multirow{10}*{7} & 8    & 0.000011 & 0.067836\\
+                        & 16   & 0.000023 & 0.142724\\
+                        & 32   & 0.000038 & 0.300010\\
+                        & 64   & 0.000071 & 0.608626\\
+                        & 128  & 0.000124 & 1.228976\\
+                        & 256  & 0.000229 & 2.452049\\
+                        & 512  & 0.000457 & 5.102434\\
+                        & 1024 & 0.000900 & 9.777386\\
+                        & 2048 & 0.001731 & 19.666379\\
+                        & 4096 & 0.002275 & 39.167946\\
       \hline
     \end{tabular}
   \end{center}
-  \caption{Selected median execution times of \bigrig{} and BioGeoBEARS for various range and tree sizes.}\label{tab:runtimes}
+  \caption{Median execution times of \bigrig{} and BioGeoBEARS for various range and tree sizes.}\label{tab:runtimes}
 \end{table}
 
 
