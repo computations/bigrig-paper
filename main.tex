@@ -545,6 +545,16 @@ We implemented this pipeline in Snakemake\citep{molder2021} and we measured exec
 \texttt{perf}.
 The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
 required to utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
+The time measured was the total execution time of \bigrig{}, including the time required to write result files.
+
+We also measured the performance of the simulator contained in the BioGeoBEARS pacackage
+\citep{ModelSelectionMatzke2014}.
+We implemented a similar pipeline to the one specified above to benchmark \bigrig{}.
+However, for these benchmarks, we only tested the range sizes $3$ and $7$, and tree sizes $2^i, 3 \leq i \leq 12$.
+We benchmarked each range and tree size pair 10 times, for a total of 200 trials.
+Furthermore, we measured the execution time of 10 independent runs for each trial, for a total of 2000 execution time
+measurements.
+
 
 In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe v0.2 \citep{zapletal2021}.
 Softwipe assess the code quality via a series of hureistics, and then produces a score between 0 and 10, with 0 being
@@ -592,6 +602,24 @@ This indicates that \bigrig{} is among the tools with the highest software quali
       Shaded area indicates the 0.95 confidence band as computed by the \texttt{predict.Gam} function in R.
     }\label{fig:runtime-taxa}
 \end{figure}
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}[c]{l|l|l|l}
+      \hline
+      \multicolumn{1}{c}{\textbf{Range}} & 
+      \multicolumn{1}{c|}{\textbf{Taxa}} &
+      \multicolumn{1}{c}{\textbf{\bigrig{}}} &
+      \multicolumn{1}{c}{\textbf{BioGeoBEARS}} \\
+      \hline
+
+      7 & 4096 & 0.0001 & 38.99\\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{Selected median execution times of \bigrig{} and BioGeoBEARS for various range and tree sizes.}\label{tab:runtimes}
+\end{table}
+
 
 \section{Conclusion}
 
