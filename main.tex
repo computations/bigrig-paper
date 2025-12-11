@@ -2,7 +2,7 @@
 
 \documentclass[a4paper]{article}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{geometry}[margins=1in]
+\usepackage[margin=1in]{geometry}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{natbib}
@@ -543,29 +543,33 @@ For each tree generated, we generated 10 random ranges of size $3, 7, 15, 31$, a
 The first cladogenesis parameter set is the fixed parameters used in the original DEC, whereas the second parameter set
 simply "enables" jumps to occur, I.E. converts the model to \decj{}.
 This yields 10 datasets for each tree, 20 datasets for each range size, for a total of 14,000 datasets.
-We implemented this pipeline in Snakemake\citep{molder2021} and we measured execution times with the Linux tool
-\texttt{perf}.
-The execution times of \bigrig{} tend to be very short, so to measure with sufficient resolution we found it was
-required to utilize \texttt{perf} which uses kernel and hardware level performance counters to measure runtime.
-The time measured was the total execution time of \bigrig{}, including the time required to write result files.
+We implemented this pipeline in Snakemake\citep{molder2021} and we measured execution times using the high precision
+system clock.
+The time measured was the time to configure and run the simulation in \bigrig{}, excluding the time required to write
+out the result files.
+We excluded the time to write the result files, as this can have a large degree of variance due to differences in file
+system and disk layouts.
+As such, we have excluded this portion of the execution time, however it is proportional to the execution time.
 
 We also measured the performance of the simulator contained in the BioGeoBEARS pacackage
 \citep{ModelSelectionMatzke2014}.
 We implemented a similar pipeline to the one specified above to benchmark \bigrig{}.
-However, for these benchmarks, we only tested the range sizes $3$ and $7$, and tree sizes $2^i, 3 \leq i \leq 12$.
+However, for these benchmarks we only tested the range sizes $3, 7$, and $9$, and tree sizes $8, 32, 128, 512, 2048$ for
+the purposes of conserving time.
+Cladogenesis model parameters for these benchmarks are the same as above, however for this benchmark $d = e = 0.1$.
 We benchmarked each range and tree size pair 10 times, for a total of 200 trials.
 Furthermore, we measured the execution time of 10 independent runs for each trial, for a total of 2000 execution time
 measurements.
 
 In addition to the performance benchmarks, we also benchmarked the software quality using Softwipe v0.2 \citep{zapletal2021}.
-Softwipe assess the code quality via a series of hureistics, and then produces a score between 0 and 10, with 0 being
+Softwipe assess the code quality via a series of heuristics, and then produces a score between 0 and 10, with 0 being
 low quality, and 10 being high quality.
 
 \section{Results}
 
 For all tests we conducted, \bigrig{} passed.
 That is, all methods produced results which were equivalent between the rejection and analytic methods, and each
-analytical methods produdo we have a list of softwipe ced the expected distribution.
+analytical method produced the expected distribution.
 As each statistical test can be considered independent, we can estimate the probability of an implementation error in
 \bigrig{} going undetected as the product of a type I error for each test.
 To be explicit, the probability of an undetected error is nearly 0, and we can be nearly certain that no such bug exists
@@ -585,6 +589,12 @@ This can be seen as well in Fig.~\ref{fig:runtime-taxa}, as the increase in exec
 taxa is much larger than the standard deviation (the grey shaded region).
 Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx 8
 \times 10^{-12}$.
+
+In comparison with the simulator for BioGeoBEARS, \bigrig{} is extremely fast, often one to three orders of magnitude
+faster.
+As the simulator for BioGeoBEARS has exponential scaling with regards to range size, the difference in runtime between
+the two tools grows exponentially as the number of regions increases.
+For details, please see Table~\ref{tab:runtimes}.
 
 Softwipe evaluated the \bigrig{} code to have a software score of 8.5, indicating a very high quality of software. 
 This indicates that \bigrig{} is among the tools with the highest software quality.
@@ -612,36 +622,34 @@ This indicates that \bigrig{} is among the tools with the highest software quali
       S[round-mode = places, round-precision = 1, exponent-mode = scientific, table-format = 2.1e2]
     @{}}
       \hline
-      \multicolumn{1}{c|}{\textbf{Ranges}} & 
+      \multicolumn{1}{c|}{\textbf{Regions}} & 
       \multicolumn{1}{c|}{\textbf{Taxa}} &
       {\textbf{\bigrig{}}} &
       {\textbf{BioGeoBEARS}} \\
       \hline
-      \multirow{10}*{3} & 8    & 0.000009 & 0.000891\\
-                        & 16   & 0.000019 & 0.001756\\
-                        & 32   & 0.000034 & 0.003286\\
-                        & 64   & 0.000062 & 0.006493\\
-                        & 128  & 0.000105 & 0.013636\\
-                        & 256  & 0.000185 & 0.025998\\
-                        & 512  & 0.000388 & 0.049750\\
-                        & 1024 & 0.000772 & 0.097324\\
-                        & 2048 & 0.001290 & 0.193900\\
-                        & 4096 & 0.002071 & 0.392399\\
+      \multirow{5}*{3}  & 8    & 0.000216 & 0.000792\\
+                        & 32   & 0.000778 & 0.002969\\
+                        & 128  & 0.003047 & 0.012784\\
+                        & 512  & 0.012030 & 0.049971\\
+                        & 2048 & 0.047995 & 0.192295\\
       \hline
-      \multirow{10}*{7} & 8    & 0.000011 & 0.067836\\
-                        & 16   & 0.000023 & 0.142724\\
-                        & 32   & 0.000038 & 0.300010\\
-                        & 64   & 0.000071 & 0.608626\\
-                        & 128  & 0.000124 & 1.228976\\
-                        & 256  & 0.000229 & 2.452049\\
-                        & 512  & 0.000457 & 5.102434\\
-                        & 1024 & 0.000900 & 9.777386\\
-                        & 2048 & 0.001731 & 19.666379\\
-                        & 4096 & 0.002275 & 39.167946\\
+      \multirow{5}*{7}  & 8    & 0.000230 & 0.044566\\
+                        & 32   & 0.000832 & 0.191537\\
+                        & 128  & 0.003201 & 0.776590\\
+                        & 512  & 0.012545 & 3.118682\\
+                        & 2048 & 0.049919 & 12.410700\\
+      \hline
+      \multirow{5}*{9}  & 8    & 0.000234 & 2.204189\\
+                        & 32   & 0.000858 & 9.588778\\
+                        & 128  & 0.003262 & 39.663921\\
+                        & 512  & 0.012778 & 158.14092\\
+                        & 2048 & 0.050702 & 631.8792\\
       \hline
     \end{tabular}
   \end{center}
-  \caption{Median execution times of \bigrig{} and BioGeoBEARS for various range and tree sizes.}\label{tab:runtimes}
+  \caption{Median execution times of \bigrig{} and BioGeoBEARS for various range and tree sizes. Each tool was executed
+  10 times with 10 different trees for each region and taxa value, resulting in 1500 total iterations for each
+  tool. Model parameters were set to $s = v = y = j = 1.0$ and $d = e = 0.1$ for all iterations.}\label{tab:runtimes}
 \end{table}
 
 
