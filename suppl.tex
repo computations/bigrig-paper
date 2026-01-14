@@ -1,0 +1,145 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{lineno}
+\usepackage{hyperref}
+\usepackage{svg}
+\usepackage{natbib}
+
+\bibliographystyle{sysbio}
+
+\newcommand{\CountFull}[1]{|#1|_\text{full}}
+\newcommand{\CountEmpty}[1]{|#1|_\text{empty}}
+\newcommand{\bigrig}{\texttt{bigrig}}
+\newcommand{\decj}{DEC[+J]}
+\newcommand{\rand}[2]{#1 \land #2}
+\newcommand{\ror}[2]{#1 \lor #2}
+\newcommand{\rneg}[1]{\neg #1}
+\newcommand{\rxor}[2]{#1 \oplus #2}
+\newcommand{\rLshift}[2]{#1 \ll #2}
+\newcommand{\rRshift}[2]{#1 \gg #2}
+
+\title{Supplemental material for \bigrig{}}
+\author{Ben Bettisworth and Alexis Stamatakis}
+
+\linenumbers
+
+\begin{document}
+\maketitle
+
+\section{DEC-ishSSE}
+
+We want to implement in \bigrig{} an SSE style model, as these models are becoming more popular for inference of
+ancestral ranges and other states.
+The obvious model implement would be GeoSSE \citep{goldberg2011}, which is an SSE model specifically developed for
+historical biogeography.
+However, the number of parameters for the GeoSSE model scales exponentially with the number of regions.
+This makes it impractical, both to implement in software for technical reasons, and to use.
+
+An alternative model which has significantly fewer parameters is FIG \citep{landis2022}.
+However, while the number of parameters is indeed much smaller, the relationships \textit{between} those parameters is
+much more complicated.
+As such, the model is challenging to implement, and to ensure that the implementation is correct, add the relationships
+between the parameters obfuscates the operation of the underlying mechanics.
+Therefore, we will instead seek to develop our own model which meets our criteria, which are:
+\begin{enumerate}
+  \itemsep 0pt
+  \parskip 0pt
+  \item Model the cladogenesis process as tree growth;
+  \item Incorporate state specific rates;
+  \item And is simple to implement.
+\end{enumerate}
+That is, the model needs to be able to sample a tree along with internal states, and the specific probability of
+cladogenesis, extinction, or dispersal is state specific.
+Finally, the model should be relatively simple to implement as software while also containing all the fundamental pieces
+of the GeoSSE model.
+To this end, we present DEC-ishSSE, a toy model which should be used as a proof of concept for implementing software.
+Here, a toy model means that it is not intended for use with ``real'' data, but instead should be used for validating
+software and inference methods, as a stepping stone to more complicated and realistic models.
+
+The main thrust of DEC-ishSSE is that each region has 6 parameters specified, one for each rate of a normal
+\decj{} model. 
+Then, states derive their specific rates from the rates of its corresponding region.
+Each region rate is either an ``in'' or a ``to'' rate, where an ``in`` rate is the rate of of the event occurring
+\textit{in} the region, and an ``to'' rate is the rate of the event occurring \textit{to} the region from all other
+regions.
+In total, DEC-ishSSE has 6 parameters for each region, which are listed in Table~\ref{tab:decish-rates}.
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}[c]{l|l|l}
+      \hline
+      \multicolumn{1}{c|}{\textbf{Parameter}} & 
+      \multicolumn{1}{c|}{\textbf{Description}} & 
+      \multicolumn{1}{c}{\textbf{Type}} \\
+      \hline
+      $a$ & Rate of Allopatric Cladogenesis & In \\
+      $s$ & Rate of Sympatric Cladogenesis & In \\
+      $y$ & Rate of Sympatric (Singleton) Cladogenesis & In \\
+      $j$ & Rate of Jump Events & To \\
+      $d$ & Rate of Dispersion Events & To \\
+      $e$ & Rate of Extinction Events & In \\
+      \hline
+    \end{tabular}
+  \caption{Per region parameters for the DEC-ishSSE model.}\label{tab:decish-rates}
+  \end{center}
+\end{table}
+
+The rate of an ``in'' event $I$ for a specific range (state) $R$ is given as
+$$
+I(R) = \sum_{r \in R}
+\begin{cases}
+  I(r)  &\text{ if } \CountFull{r} = 1\\
+  0     &\text{ otherwise.}
+\end{cases}
+$$
+Here $I(r)$ is simply the rate of event type $I$ for region $r$.
+Similarly, the rate of an ``to'' event  $T$ is 
+$$
+T(R) = \CountFull{R} \times \sum_{r \in R}
+\begin{cases}
+  T(r)  &\text{ if } \CountFull{r} = 0\\
+  0     &\text{ otherwise.}
+\end{cases}
+$$
+Likewise, $T(r)$ is the rate of event type $I$ for region $r$.
+As mentioned above ``to'' events represent when range evolution happens from region to region.
+To model this, we include the factor $\CountFull{R}$ to the rate of out events, as each full range is capable of acting
+as a source region to the destination region.
+
+A pair of cases are required when computing $I$ based on if $R$ is a singleton or not, i.e. $\CountFull{R} = 1$.
+In the non-singleton case, the copy cladogenesis is disallowed, i.e. the rate of copy events is $0$.
+In the singleton case, sympatric and allopatric cladogenesis is disallowed, and copy cladogenesis is allowed, i.e.
+$s=a=0$.
+
+Once the rate for a range has been computed, the evolution of that range is governed by an exponential process with
+rate equal to the sum of all event rates.
+Once an event occurs, the event type and range is drawn according to the proportional weight of the range and event.
+
+\subsection{Using DEC-ishSSE in practice}
+
+If one insisted on using DEC-ishSSE with real data, we would recommend the following two restrictions:
+\begin{itemize}
+  \itemsep 0pt
+  \parskip 0pt
+  \item $y=s$ for all regions;
+  \item and $j=0$ for all regions.
+\end{itemize}
+In particular, jump events allow for regions that are not part of the parent range to be present in one of the daughter
+ranges.
+This confounds the processes of dispersion and allopatric cladogenesis, and prevents DEC-ishSSE from being a sub-model of
+GeoSSE.
+We suggest the constraint the constraint $s=y$ as it makes the model more consistent with the principle that each region
+has some rate of an event occurring.
+Given that sympatric cladogenesis and copy cladogenesis are functionally the same event, having the two events
+represented by different rates is inconsistent.
+Additionally, this constraint improves the biological plausibility of the model, as it seems unlikely that a population
+is more or less likely to undergo sympatric cladogenesis based on whether or not the population is endemic to a single
+region.
+
+With these restrictions, DEC-ishSSE becomes a strict sub-model of both GeoSSE and FIG.
+
+\bibliography{references}
+
+\end{document}
