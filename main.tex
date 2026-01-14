@@ -443,6 +443,12 @@ with $r$ as the parent range.
 When the waiting time for a branch exceeds $t$, the process halts.
 We recursively iterate over all branches until the path from each extant tip to the root has a length of $t$.
 
+In addition to simulating a tree under the \decj model, we also allow for tree simulation under an SSE model that we
+call DEC-ishSSE.
+This model is an attempt to make a model which is principally similar to other biogeographic SSE models (GeoSSE
+\citep{goldberg2011}, FIG \cite{landis2022}), but is simpler to implement.
+We describe this model in full in supplemental material.
+
 \begin{algorithm}
   \SetKwFunction{KwFn}{SampleTree}
   \SetKwProg{Fn}{Function}{:}{}
@@ -669,6 +675,10 @@ ability of any current inference software to infer.
 
 In the future, we wish extend the features of \bigrig{} to include dataset generation for the family of State Specific
 Evolution (SSE) models (BiSSE, GeoSSE, ClaSSE) \citep{cornuault2022}.
+In truth, we have already started this process with the implementation of data generation under the DEC-ishSSE model
+(described in the supplemental material).
+However, DEC-ishSSE is a toy model, a model who's purpose is to be a proof of concept, and is not intended for use in
+inference using empirical data.
 The primary purpose of these extensions is to test the robustness of \decj{} models to model violations, in order to
 asses the added value of these models.
 This analysis is important for future tool development, as the more advanced SSE member models cannot be inferred using
