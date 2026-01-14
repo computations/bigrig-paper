@@ -1,8 +1,8 @@
 %! TeX program = lualatex
 
 \documentclass[a4paper]{article}
-\usepackage[dvipsnames]{xcolor}
 \usepackage[margin=1in]{geometry}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{natbib}
@@ -19,7 +19,6 @@
 \usepackage{siunitx}
 
 \bibliographystyle{sysbio}
-
 
 \newcommand{\CountFull}[1]{|#1|_\text{full}}
 \newcommand{\CountEmpty}[1]{|#1|_\text{empty}}
@@ -140,9 +139,6 @@ Subsequently, we conduct statistical tests to verify that the results of these t
 Finally, we show that \bigrig{} is computationally efficient.
 We demonstrate that \bigrig{} can generate datasets for trees with tens of thousands of tips and 63 regions in under 0.5
 seconds on a mid-range laptop.
-
-% \todo[ingreen]{Simpify this section. Specifically, I need to explain why other simulators aren't typically used, and
-% the difficulty of using RevBayes.}
 
 \section{Background}
 
