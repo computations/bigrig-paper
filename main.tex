@@ -546,12 +546,14 @@ The first cladogenesis parameter set is the fixed parameters used in the origina
 simply "enables" jumps to occur, I.E. converts the model to \decj{}.
 This yields 10 datasets for each tree, 20 datasets for each range size, for a total of 14,000 datasets.
 We implemented this pipeline in Snakemake\citep{molder2021} and we measured execution times using the high precision
-system clock.
+system clock implemented in the \texttt{C++} standard library.
 The time measured was the time to configure and run the simulation in \bigrig{}, excluding the time required to write
 out the result files.
 We excluded the time to write the result files, as this can have a large degree of variance due to differences in file
 system and disk layouts.
 As such, we have excluded this portion of the execution time, however it is proportional to the execution time.
+Additionally, we also recorded the time spent configuring and executing the simulation separately, in addition to the
+total time.
 
 We also measured the performance of the simulator that forms part of the BioGeoBEARS package
 \citep{ModelSelectionMatzke2014}.
@@ -581,19 +583,28 @@ To be explicit, the probability of an undetected error is nearly 0, and we can b
 in \bigrig{}.
 
 In general, \bigrig{} is extremely fast, as can be seen in the Fig.~\ref{fig:runtime-taxa}. 
-The mean execution time varies from 0.030 seconds ($\mathit{SD} = 0.002$) with 3 regions and 65536 taxa to 0.046 seconds
-($\mathit{SD} = 0.004$) with 63 regions and 65536 taxa.
-The minimum time over all trials was 0.000004 (3 regions, 8 taxa) seconds, and the maximum time was 0.081 seconds (63
+The mean execution time varies from 0.12 seconds ($\mathit{SD} = 0.018$) with 3 regions and 65536 taxa to 0.13 seconds
+($\mathit{SD} = 0.009$) with 63 regions and 65536 taxa.
+The minimum time over all trials was 0.0004 (3 regions, 8 taxa) seconds, and the maximum time was 0.221 seconds (63
 regions, 65536 taxa).
 The overall execution times are shown in Fig.~\ref{fig:runtime-taxa}.
 
+Time to configure the simulation (the time required to parse the tree and config file, as well as initalize the data
+required) represented the majority of execution time for most runs.
+For example, on simulations with 65536 taxa and 63 regions the mean configuration time was 0.090 seconds whereas the
+mean execution time was 0.050 seconds.
+In contrast, on simulations with 8 taxa and 3 regions the mean configuration and execution times were 0.00068 seconds
+and 0.00002 seconds, respectively.
+The domination of configuration for execution time explains the super-exponential scaling with respect to taxa number,
+as a (relatively) large portion of the time spent in configuration has constant cost, due to simply opening files.
+
 The jump parameter had a noticeable, but small, impact on the overall runtime of \bigrig{}.
-The mean time to generate data with 63 regions and 65536 taxa when $j = 1$ was 0.048 ($\mathit{SD} = 0.002$) versus 
-0.044 ($\mathit{SD} = 0.005$) with $j = 0$.
+The mean time to generate data with 63 regions and 65536 taxa when $j = 1$ was 0.142 ($\mathit{SD} = 0.001$) versus 
+0.136 ($\mathit{SD} = 0.002$) with $j = 0$.
 This can be seen as well in Fig.~\ref{fig:runtime-taxa}, as the increase in execution time from added regions or added
 taxa is much larger than the standard deviation (the grey shaded region).
-Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx 8
-\times 10^{-12}$.
+Additionally, the difference between jumps and no jumps is statistically measurable via a two sided t-test $p \approx
+0.0007$.
 
 In comparison with the BioGeoBEARS simulator, \bigrig{} is extremely fast. 
 The speedups typically range between one to three orders of magnitude and tend to increase with increasing simulation
@@ -639,23 +650,23 @@ expect the rankings to substantially change.}
       {\textbf{\bigrig{}}} &
       {\textbf{BioGeoBEARS}} \\
       \hline
-      \multirow{5}*{3}  & 8    & 0.000216 & 0.000792\\
-                        & 32   & 0.000778 & 0.002969\\
-                        & 128  & 0.003047 & 0.012784\\
-                        & 512  & 0.012030 & 0.049971\\
-                        & 2048 & 0.047995 & 0.192295\\
+      \multirow{5}*{3}  & 8    & 0.000631 & 0.000792\\
+                        & 32   & 0.000675 & 0.002969\\
+                        & 128  & 0.000937 & 0.012784\\
+                        & 512  & 0.001983 & 0.049971\\
+                        & 2048 & 0.005955 & 0.192295\\
       \hline
-      \multirow{5}*{7}  & 8    & 0.000230 & 0.044566\\
-                        & 32   & 0.000832 & 0.191537\\
-                        & 128  & 0.003201 & 0.776590\\
-                        & 512  & 0.012545 & 3.118682\\
-                        & 2048 & 0.049919 & 12.410700\\
+      \multirow{5}*{7}  & 8    & 0.000614 & 0.044566\\
+                        & 32   & 0.000678 & 0.191537\\
+                        & 128  & 0.000953 & 0.776590\\
+                        & 512  & 0.002022 & 3.118682\\
+                        & 2048 & 0.006228 & 12.410700\\
       \hline
-      \multirow{5}*{9}  & 8    & 0.000234 & 2.204189\\
-                        & 32   & 0.000858 & 9.588778\\
-                        & 128  & 0.003262 & 39.663921\\
-                        & 512  & 0.012778 & 158.14092\\
-                        & 2048 & 0.050702 & 631.8792\\
+      \multirow{5}*{9}  & 8    & 0.000607 & 2.204189\\
+                        & 32   & 0.000685 & 9.588778\\
+                        & 128  & 0.000962 & 39.663921\\
+                        & 512  & 0.002051 & 158.14092\\
+                        & 2048 & 0.005540 & 631.8792\\
       \hline
     \end{tabular}
   \end{center}
@@ -663,7 +674,6 @@ expect the rankings to substantially change.}
   10 times with 10 different trees for each region and taxa value, resulting in 1500 total iterations for each tool.
   Model parameters were set to $s = v = y = j = 1.0$ and $d = e = 0.1$ for all iterations.}\label{tab:runtimes}
 \end{table}
-
 
 \section{Conclusion}
 
